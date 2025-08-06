@@ -66,13 +66,22 @@ const GenomeAssemblyGame = () => {
         description: "応用編：エラー1個、逆鎖1個、6reads"
       },
       3: { 
-        length: 120, 
+        length: 100, 
         numReads: 6,
         avgReadLength: 30, 
         readLengthVariation: 0.25,
         errorReads: 1,
         reverseReads: 2,
-        description: "実践編：長い配列、エラー1個、逆鎖2個、6reads"
+        description: "上級編：長い配列、エラー1個、逆鎖2個、6reads"
+      },
+      4: {
+        length: 1000,
+        numReads: 20,
+        avgReadLength: 100, 
+        readLengthVariation: 0.3,
+        errorReads: 5,
+        reverseReads: 5,
+        description: "実践編：さらに長い配列、エラー5個、逆鎖5個、20reads"
       }
     };
     return configs[level];
@@ -545,16 +554,6 @@ const GenomeAssemblyGame = () => {
     setReads(allUsedReads);
   };
 
-  // readを選択（使用しない - 最初からすべて選択済み）
-  const selectRead = (read) => {
-    // この関数は使用されません
-  };
-
-  // readの選択を解除（使用しない - すべて選択済み状態を維持）
-  const removeRead = (readToRemove) => {
-    // この関数は使用されません
-  };
-
   // すべてのreadsがクリアされたかチェック
   const checkAllReadsUsed = () => {
     return reads.every(r => r.used);
@@ -678,7 +677,6 @@ const GenomeAssemblyGame = () => {
     }
   }, [selectedReads, targetSequence]);
 
-  const availableReads = reads.filter(r => !r.used);
   const config = getLevelConfig(level);
   const similarity = assembledSequence ? calculateSimilarity(assembledSequence, targetSequence) : 0;
 
@@ -697,7 +695,7 @@ const GenomeAssemblyGame = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 font-medium">レベル選択:</span>
               <div className="flex gap-1">
-                {[1, 2, 3].map(levelNum => (
+                {[1, 2, 3, 4].map(levelNum => (
                   <button
                     key={levelNum}
                     onClick={() => setLevel(levelNum)}
@@ -760,6 +758,13 @@ const GenomeAssemblyGame = () => {
                   <div>• より戦略的なアプローチが必要</div>
                 </>
               )}
+                {level === 4 && (
+                    <>
+                    <div>• 1000bpの長大な配列を100万個のreadでアセンブリ</div>
+                    <div>• エラー5個、逆鎖5個を含む現実的なシナリオ</div>
+                    <div>• 高度な戦略とメモ機能が鍵</div>
+                    </>
+                )}
             </div>
           </div>
         )}
@@ -796,7 +801,7 @@ const GenomeAssemblyGame = () => {
               {showTarget ? '隠す' : '表示'}
             </button>
           </div>
-          <div className="font-mono text-sm bg-white p-3 rounded border">
+          <div className="font-mono text-sm bg-white p-3 rounded border break-words">
             {showTarget ? (
               targetSequence.split('').map((base, i) => (
                 <span
@@ -832,7 +837,7 @@ const GenomeAssemblyGame = () => {
               )}
             </div>
           </div>
-          <div className="font-mono text-sm bg-white p-3 rounded border min-h-[3rem] flex items-center overflow-x-auto">
+          <div className="font-mono text-sm bg-white p-3 rounded border break-words">
             {assembledSequence ? (
               assembledSequence.split('').map((base, i) => (
                 <span
@@ -844,9 +849,6 @@ const GenomeAssemblyGame = () => {
                     ${base === 'G' ? 'text-green-600' : ''}
                     ${base === 'C' ? 'text-purple-600' : ''}
                     ${base === 'N' ? 'text-gray-400 bg-gray-200' : ''}
-                    ${checkAllReadsUsed() && checkSuccess(assembledSequence, targetSequence) ? 'bg-green-200' : 
-                      checkAllReadsUsed() ? 'bg-red-200' : 
-                      similarity >= 0.7 ? 'bg-yellow-200' : ''}
                   `}
                 >
                   {base}
@@ -882,7 +884,7 @@ const GenomeAssemblyGame = () => {
                     ${dragOverIndex === index ? 'transform translate-y-1' : ''}
                   `}
                 >
-                  <div className={`w-full p-2 rounded-lg font-mono text-xs border text-left ${
+                  <div className={`h-full p-2 rounded-lg font-mono text-xs border text-left ${
                     index === 0 ? 'bg-blue-200 border-blue-400' : 'bg-green-200'
                   }`}>
                     <div className="flex items-center justify-between mb-1">
@@ -898,7 +900,7 @@ const GenomeAssemblyGame = () => {
                         {read.length}bp {read.hasError ? '⚠️' : ''} {read.isReverse ? '↺' : ''}
                       </span>
                     </div>
-                    <div>
+                    <div className='break-words'>
                       {read.sequence.split('').map((base, i) => (
                         <span
                           key={i}
@@ -1030,7 +1032,7 @@ const GenomeAssemblyGame = () => {
 
         {/* ヒント */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-          <h4 className="font-semibold mb-2">💡 コツ：</h4>
+          <h4 className="font-semibold mb-2">💡</h4>
           <div className="space-y-1">
             <div>• <strong className="text-red-600">A</strong>=赤, <strong className="text-blue-600">T</strong>=青, <strong className="text-green-600">G</strong>=緑, <strong className="text-purple-600">C</strong>=紫</div>
             <div>• ⚠️ = シーケンシングエラー含む, ↺ = 逆鎖（リバースコンプリメント）</div>
