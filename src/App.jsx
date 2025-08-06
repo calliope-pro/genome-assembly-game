@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Shuffle, RotateCcw, CheckCircle, Eye, EyeOff, Lightbulb, StickyNote } from 'lucide-react';
 
 const GenomeAssemblyGame = () => {
@@ -16,9 +16,23 @@ const GenomeAssemblyGame = () => {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
-  // ランダムシード生成関数 - より良いランダム性を確保
+  // ランダムシード生成関数 - より強力なランダム性を確保
   const getRandomSeed = () => {
-    return Date.now() + Math.random() * 1000000 + performance.now();
+    const crypto = window.crypto || window.msCrypto;
+    let cryptoRandom = Math.random();
+    
+    if (crypto && crypto.getRandomValues) {
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      cryptoRandom = array[0] / 4294967295; // normalize to 0-1
+    }
+    
+    return Date.now() + 
+           Math.random() * 1000000 + 
+           performance.now() + 
+           cryptoRandom * 1000000 +
+           (Math.random() * 1000) + // additional entropy
+           new Date().getMilliseconds();
   };
 
   // シード可能なランダム生成器
@@ -81,11 +95,11 @@ const GenomeAssemblyGame = () => {
         const lastThree = sequence.slice(-3);
         if (lastThree.length < 3) break;
         if (!(lastThree[0] === base && lastThree[1] === base && lastThree[2] === base)) break;
-        
-        // 無限ループを避けるため、10回試行したら諦める
-        if (attempts > 10) break;
-      } while (attempts <= 10);
-      
+
+        // 無限ループを避けるため、1000回試行したら諦める
+        if (attempts > 1000) break;
+      } while (attempts <= 1000);
+
       sequence.push(base);
     }
     
@@ -98,18 +112,17 @@ const GenomeAssemblyGame = () => {
     return seq.split('').reverse().map(base => complement[base]).join('');
   };
 
-  // エラーを導入（置換エラー）- overlap領域を避ける
-  const introduceError = (sequence, avoidStart = 0, avoidEnd = 0, random = Math.random) => {
+  // シンプルなエラー導入関数 - overlap領域を完全に避ける
+  const introduceError = (sequence, startPos, endPos, random = Math.random) => {
     const bases = ['A', 'T', 'G', 'C'];
-    const minOverlap = Math.max(8, Math.floor(sequence.length * 0.4));
+    const overlapSize = 8; // 固定のoverlap保護サイズ
     
-    // overlap領域を避けた範囲を計算
-    const safeStart = Math.max(0, avoidStart);
-    const safeEnd = Math.min(sequence.length, sequence.length - avoidEnd);
-    const safeLength = safeEnd - safeStart;
+    // 保護すべき領域を計算（両端のoverlap領域）
+    const safeStart = overlapSize;
+    const safeEnd = sequence.length - overlapSize;
     
-    // 安全な範囲がない場合は中央付近にエラーを導入
-    if (safeLength <= 0) {
+    // 安全な範囲がない場合は中央に配置
+    if (safeEnd <= safeStart) {
       const centerPos = Math.floor(sequence.length / 2);
       const originalBase = sequence[centerPos];
       const possibleBases = bases.filter(b => b !== originalBase);
@@ -117,9 +130,8 @@ const GenomeAssemblyGame = () => {
       return sequence.substring(0, centerPos) + wrongBase + sequence.substring(centerPos + 1);
     }
     
-    // 安全な範囲内でランダムな位置を選択
-    const relativePos = Math.floor(random() * safeLength);
-    const pos = safeStart + relativePos;
+    // 安全な範囲内でランダム選択
+    const pos = safeStart + Math.floor(random() * (safeEnd - safeStart));
     const originalBase = sequence[pos];
     const possibleBases = bases.filter(b => b !== originalBase);
     const wrongBase = possibleBases[Math.floor(random() * possibleBases.length)];
@@ -127,181 +139,148 @@ const GenomeAssemblyGame = () => {
     return sequence.substring(0, pos) + wrongBase + sequence.substring(pos + 1);
   };
 
-  // readsを生成（確実に復元可能になるよう完全再設計）
-  const generateReads = (sequence, config) => {
+  // シンプルなreads生成関数
+  const generateReads = (sequence, config, providedSeed = null) => {
     const { numReads, avgReadLength, readLengthVariation, errorReads, reverseReads } = config;
-    const reads = [];
-    const minOverlap = Math.max(8, Math.floor(avgReadLength * 0.4)); // より確実なoverlap
-    
-    // 新しいランダムシードを生成して使用
-    const seed = getRandomSeed();
+    const seed = providedSeed || getRandomSeed();
     const random = createSeededRandom(seed);
     
-    console.log(`Generating ${numReads} reads for sequence length ${sequence.length} with seed: ${seed}`);
-    console.log(`Target sequence: ${sequence}`);
-    console.log(`Average read length: ${avgReadLength}, Min overlap: ${minOverlap}`);
+    console.log(`Generating ${numReads} reads with seed: ${seed}`);
     
-    // Step 1: 各readの長さを先に決定
+    // Step 1: シンプルな等間隔配置でread位置を決定
+    const readPositions = [];
     const readLengths = [];
+    
+    // read長さを先に決定
     for (let i = 0; i < numReads; i++) {
       const lengthVar = 1 + (random() - 0.5) * 2 * readLengthVariation;
-      const readLength = Math.max(12, Math.floor(avgReadLength * lengthVar));
+      const readLength = Math.max(10, Math.floor(avgReadLength * lengthVar));
       readLengths.push(readLength);
     }
     
-    // Step 2: 確実にカバーするための位置を計算
-    const positions = [];
+    // 位置を等間隔に配置（最初は0、最後は末尾をカバー）
+    readPositions[0] = 0;
+    const lastReadLength = readLengths[numReads - 1];
+    readPositions[numReads - 1] = Math.max(0, sequence.length - lastReadLength);
     
-    // 最初のreadは位置0から
-    positions[0] = 0;
-    console.log(`Read 1: position 0, length ${readLengths[0]}, covers 0-${readLengths[0] - 1}`);
-    
-    // 各readを順次配置（確実にoverlapするように）
-    for (let i = 1; i < numReads; i++) {
-      const prevPos = positions[i - 1];
-      const prevLength = readLengths[i - 1];
-      const currentLength = readLengths[i];
-      
-      let newPos;
-      
-      if (i === numReads - 1) {
-        // 最後のreadは必ず末尾をカバーする
-        newPos = sequence.length - currentLength;
-        console.log(`  Last read: target end position ${newPos} to cover sequence end`);
-        
-        // 前のreadとのoverlapを確保しつつ末尾をカバー
-        const prevEnd = prevPos + prevLength;
-        const maxAllowedPos = prevEnd - minOverlap;
-        
-        if (newPos > maxAllowedPos) {
-          // 末尾をカバーするには overlap が不足する場合
-          console.warn(`  Last read position ${newPos} would have insufficient overlap`);
-          console.warn(`  Adjusting by extending last read or moving position`);
-          
-          // より長いreadにするか、位置を調整
-          if (sequence.length - maxAllowedPos <= currentLength * 1.5) {
-            // readを少し長くして対応
-            readLengths[i] = sequence.length - maxAllowedPos;
-            newPos = maxAllowedPos;
-            console.log(`  Extended last read length to ${readLengths[i]}`);
-          } else {
-            // それでも不足する場合は強制的に末尾をカバー
-            newPos = sequence.length - currentLength;
-            console.warn(`  Forced last read to cover sequence end, overlap may be less than ideal`);
-          }
-        }
-        
-        // 最終的な位置調整
-        newPos = Math.max(0, newPos);
-        console.log(`  Final last read position: ${newPos}, will cover ${newPos}-${newPos + readLengths[i] - 1}`);
-      } else {
-        // 中間のreadは適切なoverlapを保ちつつ均等に配置
-        const remainingReads = numReads - i;
-        const remainingLength = sequence.length - (prevPos + prevLength - minOverlap);
-        const stepSize = Math.floor(remainingLength / remainingReads);
-        
-        newPos = prevPos + prevLength - minOverlap + Math.max(1, stepSize - minOverlap);
-        
-        // 境界チェック
-        const maxPos = prevPos + prevLength - minOverlap;
-        const minPos = prevPos + Math.floor(prevLength * 0.3); // 30%以上進む
-        
-        newPos = Math.max(minPos, Math.min(newPos, maxPos));
-        newPos = Math.min(newPos, sequence.length - currentLength);
-      }
-      
-      positions[i] = Math.max(0, newPos);
-      
-      console.log(`Read ${i + 1}: position ${positions[i]}, length ${currentLength}, covers ${positions[i]}-${positions[i] + currentLength - 1}`);
-      
-      // Overlapをチェック
-      const overlapStart = Math.max(positions[i - 1], positions[i]);
-      const overlapEnd = Math.min(positions[i - 1] + readLengths[i - 1], positions[i] + currentLength);
-      const actualOverlap = Math.max(0, overlapEnd - overlapStart);
-      
-      console.log(`  Overlap with read ${i}: ${actualOverlap}bp`);
-      
-      if (actualOverlap < 3) {
-        console.warn(`  Warning: Insufficient overlap (${actualOverlap}bp) between reads ${i} and ${i + 1}`);
-      }
+    // 中間のreadを等間隔配置
+    for (let i = 1; i < numReads - 1; i++) {
+      const ratio = i / (numReads - 1);
+      const maxStartPos = sequence.length - readLengths[i];
+      readPositions[i] = Math.floor(ratio * maxStartPos);
     }
     
-    // Step 3: readsを生成
+    // Step 2: readsを生成
+    const reads = [];
     for (let i = 0; i < numReads; i++) {
-      const position = positions[i];
-      const readLength = readLengths[i]; // 調整済みの長さを使用
-      const actualLength = Math.min(readLength, sequence.length - position);
-      
-      let readSeq = sequence.substring(position, position + actualLength);
-      let isReverse = false;
-      let hasError = false;
-      
-      console.log(`Creating read ${i + 1}: pos=${position}, targetLen=${readLength}, actualLen=${actualLength}`);
-      console.log(`  Sequence: ${readSeq}`);
-      
-      // エラー導入（指定数のreadに）- overlap領域を避ける
-      if (i < errorReads) {
-        const originalSeq = readSeq;
-        // 最小overlapサイズに基づいて安全な領域を計算
-        const overlapSize = Math.max(8, Math.floor(avgReadLength * 0.4));
-        readSeq = introduceError(readSeq, overlapSize, overlapSize, random);
-        hasError = true;
-        console.log(`  Error introduced in read ${i + 1}: ${originalSeq} -> ${readSeq} (avoiding ${overlapSize}bp overlaps)`);
-      }
-      
-      // リバースコンプリメント（指定数のreadに）
-      if (i >= errorReads && i < errorReads + reverseReads) {
-        const originalSeq = readSeq;
-        readSeq = reverseComplement(readSeq);
-        isReverse = true;
-        console.log(`  Reverse complement for read ${i + 1}: ${originalSeq} -> ${readSeq}`);
-      }
+      const pos = readPositions[i];
+      const length = readLengths[i];
+      let readSeq = sequence.substring(pos, pos + length);
       
       reads.push({
         id: i,
         sequence: readSeq,
-        originalStart: position,
-        length: actualLength,
-        isReverse,
-        hasError,
+        originalStart: pos,
+        length: length,
+        isReverse: false,
+        hasError: false,
         used: false
       });
     }
     
-    // Step 4: カバレッジ検証
-    const coverage = new Array(sequence.length).fill(0);
-    reads.forEach((read, idx) => {
-      const pos = positions[idx];
-      for (let j = 0; j < read.length; j++) {
-        if (pos + j < coverage.length) {
-          coverage[pos + j]++;
-        }
+    // Step 3: ランダムに選択したreadにエラーを導入
+    if (errorReads > 0) {
+      const availableIndices = [...Array(numReads).keys()];
+      for (let i = 0; i < errorReads; i++) {
+        const randomIndex = Math.floor(random() * availableIndices.length);
+        const readIndex = availableIndices.splice(randomIndex, 1)[0];
+        
+        const originalSeq = reads[readIndex].sequence;
+        reads[readIndex].sequence = introduceError(
+          originalSeq, 
+          readPositions[readIndex],
+          readPositions[readIndex] + readLengths[readIndex],
+          random
+        );
+        reads[readIndex].hasError = true;
+        console.log(`Error in read ${readIndex + 1}: ${originalSeq} -> ${reads[readIndex].sequence}`);
       }
-    });
-    
-    const uncoveredPositions = coverage.map((c, i) => c === 0 ? i : -1).filter(p => p !== -1);
-    if (uncoveredPositions.length > 0) {
-      console.error(`Uncovered positions: ${uncoveredPositions}`);
-      console.error(`Coverage array: ${coverage}`);
-    } else {
-      console.log(`✅ Full coverage achieved!`);
     }
     
-    // シャッフル前の状態を記録
-    console.log('Generated reads (before shuffle):');
-    reads.forEach((read, i) => {
-      console.log(`  Read ${i + 1}: ${read.sequence} (pos: ${positions[i]}, len: ${read.length})`);
+    // Step 4: ランダムに選択したreadを逆鎖に
+    if (reverseReads > 0) {
+      const availableIndices = reads
+        .map((read, i) => read.hasError ? -1 : i)
+        .filter(i => i !== -1); // エラーreadを除外
+      
+      for (let i = 0; i < Math.min(reverseReads, availableIndices.length); i++) {
+        const randomIndex = Math.floor(random() * availableIndices.length);
+        const readIndex = availableIndices.splice(randomIndex, 1)[0];
+        
+        const originalSeq = reads[readIndex].sequence;
+        reads[readIndex].sequence = reverseComplement(originalSeq);
+        reads[readIndex].isReverse = true;
+        console.log(`Reverse read ${readIndex + 1}: ${originalSeq} -> ${reads[readIndex].sequence}`);
+      }
+    }
+    
+    // Step 5: 固定read id=0 + エラー/逆鎖をランダム配置
+    
+    // read id=0（位置0のread）を見つける
+    const firstRead = reads.find(read => read.id === 0);
+    const remainingReads = reads.filter(read => read.id !== 0);
+    
+    // 複数回の強力シャッフルでパターンを完全破壊
+    const nowTime = Date.now();
+    const microTime = performance.now();
+    
+    // 1回目: Fisher-Yatesアルゴリズム
+    for (let i = remainingReads.length - 1; i > 0; i--) {
+      const timeRandom = Math.sin(nowTime + i * 1000) / 2 + 0.5;
+      const mathRandom = Math.random();
+      const microRandom = Math.cos(microTime + i * 500) / 2 + 0.5;
+      const combinedRandom = (timeRandom + mathRandom + microRandom) / 3;
+      
+      const j = Math.floor(combinedRandom * (i + 1));
+      [remainingReads[i], remainingReads[j]] = [remainingReads[j], remainingReads[i]];
+    }
+    
+    // 2回目: 配列をreverse後に再シャッフル
+    if (Math.random() > 0.5) {
+      remainingReads.reverse();
+    }
+    
+    // 3回目: 時間ベースの最終シャッフル
+    for (let round = 0; round < 3; round++) {
+      const currentTime = Date.now() + round * 100;
+      for (let i = remainingReads.length - 1; i > 0; i--) {
+        const j = Math.floor((Math.sin(currentTime + i) / 2 + 0.5) * (i + 1));
+        [remainingReads[i], remainingReads[j]] = [remainingReads[j], remainingReads[i]];
+      }
+    }
+    
+    const finalResult = [firstRead, ...remainingReads];
+    
+    console.log('Heavily shuffled result:');
+    finalResult.forEach((read, i) => {
+      const markers = [];
+      if (read.hasError) markers.push('⚠️ERROR');
+      if (read.isReverse) markers.push('↺REVERSE');
+      console.log(`  ${i === 0 ? '🔒 FIXED' : 'RANDOM'} ${i + 1}: Read id=${read.id}, originalPos=${read.originalStart} ${markers.join(' ')}`);
     });
     
-    // 最初のread(位置0から始まるread)を固定し、残りをシャッフル
-    const firstRead = reads[0];  // 最初のreadを保存
-    const remainingReads = reads.slice(1);  // 残りのreadsを取得
-    const shuffledRemaining = remainingReads.sort(() => random() - 0.5);  // 残りをシャッフル
+    // エラー・逆鎖readの位置を明確に追跡
+    const errorPositions = finalResult.map((read, i) => read.hasError ? i + 1 : null).filter(p => p !== null);
+    const reversePositions = finalResult.map((read, i) => read.isReverse ? i + 1 : null).filter(p => p !== null);
     
-    console.log('First read (fixed):', firstRead.sequence);
-    console.log('Remaining reads shuffled:', shuffledRemaining.map(r => r.sequence));
+    if (errorPositions.length > 0) {
+      console.log(`🚨 Error reads at positions: ${errorPositions.join(', ')}`);
+    }
+    if (reversePositions.length > 0) {
+      console.log(`🔄 Reverse reads at positions: ${reversePositions.join(', ')}`);
+    }
     
-    return [firstRead, ...shuffledRemaining];  // 最初のreadを先頭に固定して返す
+    return finalResult;
   };
 
   // overlap検出（逆鎖read対応版）
@@ -531,12 +510,27 @@ const GenomeAssemblyGame = () => {
 
   // ゲーム初期化
   const initGame = () => {
+    // 強制的に状態をクリア
+    setReads([]);
+    setSelectedReads([]);
+    setAssembledSequence('');
+    setGameComplete(false);
+    setReadMemos({});
+    setShowMemoInput(null);
+    
     const config = getLevelConfig(level);
-    // 新しいランダムシードでDNA配列を生成
-    const seed = getRandomSeed();
-    const random = createSeededRandom(seed);
-    const newTarget = generateRealisticDNA(config.length, random);
-    const newReads = generateReads(newTarget, config);
+    
+    // 複数の独立したシードを生成
+    const dnaGenSeed = getRandomSeed();
+    const readsGenSeed = getRandomSeed() + 12345; // 異なるシードオフセット
+    
+    console.log(`=== NEW GAME INIT ===`);
+    console.log(`DNA Generation Seed: ${dnaGenSeed}`);
+    console.log(`Reads Generation Seed: ${readsGenSeed}`);
+    
+    const dnaRandom = createSeededRandom(dnaGenSeed);
+    const newTarget = generateRealisticDNA(config.length, dnaRandom);
+    const newReads = generateReads(newTarget, config, readsGenSeed); // シードを渡す
     
     setTargetSequence(newTarget);
     setReads(newReads);
@@ -697,7 +691,30 @@ const GenomeAssemblyGame = () => {
             🧬 ゲノムアセンブリチャレンジ
           </h1>
           <p className="text-gray-600">DNA断片から元の配列を復元しよう！</p>
-          <div className="flex justify-center items-center gap-4 mt-4">
+          
+          {/* レベル選択 */}
+          <div className="flex justify-center items-center gap-4 mt-4 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">レベル選択:</span>
+              <div className="flex gap-1">
+                {[1, 2, 3].map(levelNum => (
+                  <button
+                    key={levelNum}
+                    onClick={() => setLevel(levelNum)}
+                    className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors ${
+                      level === levelNum
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {levelNum}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-center items-center gap-4">
             <span className="bg-indigo-100 px-3 py-1 rounded-full text-sm font-semibold">
               レベル {level}: {config.description}
             </span>
