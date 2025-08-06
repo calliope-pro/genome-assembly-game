@@ -16,6 +16,20 @@ const GenomeAssemblyGame = () => {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
+  // ランダムシード生成関数 - より良いランダム性を確保
+  const getRandomSeed = () => {
+    return Date.now() + Math.random() * 1000000 + performance.now();
+  };
+
+  // シード可能なランダム生成器
+  const createSeededRandom = (seed) => {
+    let state = seed;
+    return () => {
+      state = (state * 9301 + 49297) % 233280;
+      return state / 233280;
+    };
+  };
+
   // レベル別設定（仕様に合わせて修正）
   const getLevelConfig = (level) => {
     const configs = {
@@ -51,7 +65,7 @@ const GenomeAssemblyGame = () => {
   };
 
   // 生物学的に現実的なDNA配列生成（同一塩基4連続以上を制限）
-  const generateRealisticDNA = (length) => {
+  const generateRealisticDNA = (length, random = Math.random) => {
     const bases = ['A', 'T', 'G', 'C'];
     const sequence = [];
     
@@ -60,7 +74,7 @@ const GenomeAssemblyGame = () => {
       let attempts = 0;
       
       do {
-        base = bases[Math.floor(Math.random() * 4)];
+        base = bases[Math.floor(random() * 4)];
         attempts++;
         
         // 4回以上同じ塩基が連続するのを避ける
@@ -84,13 +98,31 @@ const GenomeAssemblyGame = () => {
     return seq.split('').reverse().map(base => complement[base]).join('');
   };
 
-  // エラーを導入（置換エラー）
-  const introduceError = (sequence) => {
+  // エラーを導入（置換エラー）- overlap領域を避ける
+  const introduceError = (sequence, avoidStart = 0, avoidEnd = 0, random = Math.random) => {
     const bases = ['A', 'T', 'G', 'C'];
-    const pos = Math.floor(Math.random() * sequence.length);
+    const minOverlap = Math.max(8, Math.floor(sequence.length * 0.4));
+    
+    // overlap領域を避けた範囲を計算
+    const safeStart = Math.max(0, avoidStart);
+    const safeEnd = Math.min(sequence.length, sequence.length - avoidEnd);
+    const safeLength = safeEnd - safeStart;
+    
+    // 安全な範囲がない場合は中央付近にエラーを導入
+    if (safeLength <= 0) {
+      const centerPos = Math.floor(sequence.length / 2);
+      const originalBase = sequence[centerPos];
+      const possibleBases = bases.filter(b => b !== originalBase);
+      const wrongBase = possibleBases[Math.floor(random() * possibleBases.length)];
+      return sequence.substring(0, centerPos) + wrongBase + sequence.substring(centerPos + 1);
+    }
+    
+    // 安全な範囲内でランダムな位置を選択
+    const relativePos = Math.floor(random() * safeLength);
+    const pos = safeStart + relativePos;
     const originalBase = sequence[pos];
     const possibleBases = bases.filter(b => b !== originalBase);
-    const wrongBase = possibleBases[Math.floor(Math.random() * possibleBases.length)];
+    const wrongBase = possibleBases[Math.floor(random() * possibleBases.length)];
     
     return sequence.substring(0, pos) + wrongBase + sequence.substring(pos + 1);
   };
@@ -101,14 +133,18 @@ const GenomeAssemblyGame = () => {
     const reads = [];
     const minOverlap = Math.max(8, Math.floor(avgReadLength * 0.4)); // より確実なoverlap
     
-    console.log(`Generating ${numReads} reads for sequence length ${sequence.length}`);
+    // 新しいランダムシードを生成して使用
+    const seed = getRandomSeed();
+    const random = createSeededRandom(seed);
+    
+    console.log(`Generating ${numReads} reads for sequence length ${sequence.length} with seed: ${seed}`);
     console.log(`Target sequence: ${sequence}`);
     console.log(`Average read length: ${avgReadLength}, Min overlap: ${minOverlap}`);
     
     // Step 1: 各readの長さを先に決定
     const readLengths = [];
     for (let i = 0; i < numReads; i++) {
-      const lengthVar = 1 + (Math.random() - 0.5) * 2 * readLengthVariation;
+      const lengthVar = 1 + (random() - 0.5) * 2 * readLengthVariation;
       const readLength = Math.max(12, Math.floor(avgReadLength * lengthVar));
       readLengths.push(readLength);
     }
@@ -203,12 +239,14 @@ const GenomeAssemblyGame = () => {
       console.log(`Creating read ${i + 1}: pos=${position}, targetLen=${readLength}, actualLen=${actualLength}`);
       console.log(`  Sequence: ${readSeq}`);
       
-      // エラー導入（指定数のreadに）
+      // エラー導入（指定数のreadに）- overlap領域を避ける
       if (i < errorReads) {
         const originalSeq = readSeq;
-        readSeq = introduceError(readSeq);
+        // 最小overlapサイズに基づいて安全な領域を計算
+        const overlapSize = Math.max(8, Math.floor(avgReadLength * 0.4));
+        readSeq = introduceError(readSeq, overlapSize, overlapSize, random);
         hasError = true;
-        console.log(`  Error introduced in read ${i + 1}: ${originalSeq} -> ${readSeq}`);
+        console.log(`  Error introduced in read ${i + 1}: ${originalSeq} -> ${readSeq} (avoiding ${overlapSize}bp overlaps)`);
       }
       
       // リバースコンプリメント（指定数のreadに）
@@ -255,8 +293,15 @@ const GenomeAssemblyGame = () => {
       console.log(`  Read ${i + 1}: ${read.sequence} (pos: ${positions[i]}, len: ${read.length})`);
     });
     
-    // シャッフル
-    return reads.sort(() => Math.random() - 0.5);
+    // 最初のread(位置0から始まるread)を固定し、残りをシャッフル
+    const firstRead = reads[0];  // 最初のreadを保存
+    const remainingReads = reads.slice(1);  // 残りのreadsを取得
+    const shuffledRemaining = remainingReads.sort(() => random() - 0.5);  // 残りをシャッフル
+    
+    console.log('First read (fixed):', firstRead.sequence);
+    console.log('Remaining reads shuffled:', shuffledRemaining.map(r => r.sequence));
+    
+    return [firstRead, ...shuffledRemaining];  // 最初のreadを先頭に固定して返す
   };
 
   // overlap検出（逆鎖read対応版）
@@ -487,7 +532,10 @@ const GenomeAssemblyGame = () => {
   // ゲーム初期化
   const initGame = () => {
     const config = getLevelConfig(level);
-    const newTarget = generateRealisticDNA(config.length);
+    // 新しいランダムシードでDNA配列を生成
+    const seed = getRandomSeed();
+    const random = createSeededRandom(seed);
+    const newTarget = generateRealisticDNA(config.length, random);
     const newReads = generateReads(newTarget, config);
     
     setTargetSequence(newTarget);
@@ -958,7 +1006,6 @@ const GenomeAssemblyGame = () => {
             <div>• 3'→5'方向：逆鎖DNAの読み取り方向（リバースコンプリメント）</div>
             <div>• 逆鎖read：相補的な塩基に変換して逆向きにしたもの（例：ATGC → GCAT）</div>
             <div>• より長い非曖昧なoverlapを見つけることで正確なアセンブリができます</div>
-            <div>• TTTやAAA等の同一塩基の繰り返しは曖昧なoverlapなので避けられます</div>
             <div>• すべてのreadを正しい順序で配置して目標配列を復元しよう</div>
             {level >= 2 && <div>• メモ機能を使って戦略的にアプローチしよう</div>}
             {level >= 2 && <div>• エラーがあるreadは完全一致しない場合があります</div>}
