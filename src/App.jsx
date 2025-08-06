@@ -35,12 +35,12 @@ const GenomeAssemblyGame = () => {
     const configs = {
       1: { 
         length: 40, 
-        numReads: 4,
-        avgReadLength: 15, 
+        numReads: 6,
+        avgReadLength: 12, 
         readLengthVariation: 0.1,
         errorReads: 0,
         reverseReads: 0,
-        description: "基礎編：エラーなし、正鎖のみ、4reads"
+        description: "基礎編：エラーなし、正鎖のみ、6reads"
       },
       2: { 
         length: 60, 
@@ -57,8 +57,8 @@ const GenomeAssemblyGame = () => {
         avgReadLength: 30, 
         readLengthVariation: 0.25,
         errorReads: 1,
-        reverseReads: 1,
-        description: "実践編：長い配列、エラー1個、逆鎖1個、6reads"
+        reverseReads: 2,
+        description: "実践編：長い配列、エラー1個、逆鎖2個、6reads"
       }
     };
     return configs[level];
@@ -580,12 +580,21 @@ const GenomeAssemblyGame = () => {
 
   // ドラッグ&ドロップ機能
   const handleDragStart = (e, index) => {
+    // 最初のread(index 0)はドラッグできない
+    if (index === 0) {
+      e.preventDefault();
+      return;
+    }
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e, index) => {
     e.preventDefault();
+    // 最初のread(index 0)にはドロップできない
+    if (index === 0) {
+      return;
+    }
     setDragOverIndex(index);
     e.dataTransfer.dropEffect = 'move';
   };
@@ -597,7 +606,8 @@ const GenomeAssemblyGame = () => {
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
     
-    if (draggedIndex === null || draggedIndex === dropIndex) {
+    // 最初のread(index 0)に対する操作は無効
+    if (draggedIndex === null || draggedIndex === dropIndex || dropIndex === 0 || draggedIndex === 0) {
       setDraggedIndex(null);
       setDragOverIndex(null);
       return;
@@ -713,9 +723,9 @@ const GenomeAssemblyGame = () => {
             <div className="text-sm text-yellow-700 space-y-1">
               {level === 1 && (
                 <>
-                  <div>• 4個のreadで完全なアセンブリ（エラーなし、正鎖のみ）</div>
-                  <div>• すべてのreadを使って完全一致を目指そう</div>
-                  <div>• 重複部分を見つけて正しい順番に並べる</div>
+                  <div>• 6個のreadで完全なアセンブリ（エラーなし、正鎖のみ）</div>
+                  <div>• 最初のreadは固定、残り5個を正しい順番に並べる</div>
+                  <div>• 重複部分を見つけて完全一致を目指そう</div>
                 </>
               )}
               {level === 2 && (
@@ -729,7 +739,7 @@ const GenomeAssemblyGame = () => {
               {level === 3 && (
                 <>
                   <div>• 6個のreadで長い配列（120bp）をアセンブリ</div>
-                  <div>• エラー1個、逆鎖1個含む実践的なデータ</div>
+                  <div>• エラー1個、逆鎖2個含む実践的なデータ</div>
                   <div>• より戦略的なアプローチが必要</div>
                 </>
               )}
@@ -834,7 +844,7 @@ const GenomeAssemblyGame = () => {
         {/* 選択済みの断片 */}
         <div className="mb-6 p-4 bg-green-50 rounded-lg">
           <h3 className="font-semibold text-gray-800 mb-3">
-            DNA断片の配置（{selectedReads.length}個）- ドラッグで順番変更
+            DNA断片の配置（{selectedReads.length}個）- ドラッグで順番変更（1つ目は固定）
           </h3>
           
           {selectedReads.length > 0 ? (
@@ -842,22 +852,27 @@ const GenomeAssemblyGame = () => {
               {selectedReads.map((read, index) => (
                 <div
                   key={`${read.id}-${index}`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
+                  draggable={index !== 0}
+                  onDragStart={index !== 0 ? (e) => handleDragStart(e, index) : undefined}
+                  onDragOver={index !== 0 ? (e) => handleDragOver(e, index) : undefined}
+                  onDragLeave={index !== 0 ? handleDragLeave : undefined}
+                  onDrop={index !== 0 ? (e) => handleDrop(e, index) : undefined}
+                  onDragEnd={index !== 0 ? handleDragEnd : undefined}
                   className={`
-                    relative cursor-move transition-all duration-200
+                    relative transition-all duration-200
+                    ${index === 0 ? 'cursor-not-allowed bg-gray-100' : 'cursor-move'}
                     ${draggedIndex === index ? 'opacity-50 scale-95' : ''}
                     ${dragOverIndex === index ? 'transform translate-y-1' : ''}
                   `}
                 >
-                  <div className="w-full p-2 bg-green-200 rounded-lg font-mono text-xs border text-left">
+                  <div className={`w-full p-2 rounded-lg font-mono text-xs border text-left ${
+                    index === 0 ? 'bg-blue-200 border-blue-400' : 'bg-green-200'
+                  }`}>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600">Read {index + 1}</span>
+                        <span className="text-xs text-gray-600">
+                          Read {index + 1} {index === 0 ? '(固定)' : ''}
+                        </span>
                         <span className="text-xs text-blue-600 font-semibold">
                           {read.isReverse ? "3'→5' (逆鎖)" : "5'→3' (正鎖)"}
                         </span>
