@@ -27,8 +27,9 @@ const GenomeAssemblyGame = () => {
   const [assembledSequence, setAssembledSequence] = useState("");
   const [gameComplete, setGameComplete] = useState(false);
   const [score, setScore] = useState(0);
-  const [showTarget, setShowTarget] = useState(false);
+  const [showTarget, setShowTarget] = useState(true);
   const [showOverlapHints, setShowOverlapHints] = useState(false);
+  const [showHintModal, setShowHintModal] = useState(false);
   const [readMemos, setReadMemos] = useState({});
   const [showMemoInput, setShowMemoInput] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -97,6 +98,7 @@ const GenomeAssemblyGame = () => {
         description: "基礎編：エラーなし、正鎖のみ、6reads",
         minOverlap: 3,
         maxOverlap: 8,
+        score: 50,
       },
       2: {
         length: 80,
@@ -108,17 +110,19 @@ const GenomeAssemblyGame = () => {
         description: "応用編：エラー1個、逆鎖1個、6reads",
         minOverlap: 4,
         maxOverlap: 12,
+        score: 200,
       },
       3: {
-        length: 140,
-        numReads: 6,
+        length: 200,
+        numReads: 10,
         avgReadLength: 30,
         readLengthVariation: 0.3,
-        errorReads: 1,
-        reverseReads: 2,
-        description: "上級編：長い配列、エラー1個、逆鎖2個、6reads",
-        minOverlap: 7,
-        maxOverlap: 20,
+        errorReads: 2,
+        reverseReads: 3,
+        description: "上級編：長い配列、エラー2個、逆鎖3個、10reads",
+        minOverlap: 5,
+        maxOverlap: 15,
+        score: 1000,
       },
       4: {
         length: 1650,
@@ -130,6 +134,7 @@ const GenomeAssemblyGame = () => {
         description: "実践編：長い配列、エラー5個、逆鎖5個、20reads",
         minOverlap: 12,
         maxOverlap: 25,
+        score: 10000,
       },
     };
     return cfg[lvl] || cfg[1];
@@ -514,9 +519,10 @@ const GenomeAssemblyGame = () => {
     setAssembledSequence("");
     setReadMemos({});
     setShowMemoInput(null);
+    setShowOverlapHints(false);
 
     // determine seed
-    const actualSeed = (useSeed !== null ? useSeed : (seed !== null ? seed : getRandomSeed())) >>> 0;
+    const actualSeed = (useSeed !== null ? useSeed : getRandomSeed()) >>> 0;
     setSeed(actualSeed);
 
     const config = getLevelConfig(level);
@@ -538,12 +544,12 @@ const GenomeAssemblyGame = () => {
   };
 
   const reset = () => {
-    const resetReads = [...reads].sort((a, b) => a.id - b.id).map((r) => ({ ...r, used: true }));
-    setReads(resetReads);
-    setSelectedReads(resetReads);
+    setSelectedReads([...reads]);
     setAssembledSequence("");
     setGameComplete(false);
     lastSuccessRef.current = false;
+    setReadMemos({});
+    setShowMemoInput(null);
   };
 
   // ---------- drag & drop ----------
@@ -604,7 +610,7 @@ const GenomeAssemblyGame = () => {
     
     // Find which element the touch is over
     let targetIndex = null;
-    elements.forEach((el, idx) => {
+    elements.forEach((el) => {
       const rect = el.getBoundingClientRect();
       if (touch.clientY >= rect.top && touch.clientY <= rect.bottom && 
           touch.clientX >= rect.left && touch.clientX <= rect.right) {
@@ -634,6 +640,12 @@ const GenomeAssemblyGame = () => {
     setDragOverIndex(null);
   };
 
+  // ---------- hint modal handling ----------
+  const handleShowHints = () => {
+    setShowOverlapHints(true);
+    setShowHintModal(false);
+  };
+
   // ---------- effect: recompute assembly when selectedReads or target changes ----------
   useEffect(() => {
     if (!selectedReads || selectedReads.length === 0 || !targetSequence) {
@@ -647,7 +659,10 @@ const GenomeAssemblyGame = () => {
     setAssembledSequence(assembled);
     const success = checkSuccess(assembled, targetSequence, level);
     if (success && !lastSuccessRef.current) {
-      setScore((s) => s + level * 150);
+      const config = getLevelConfig(level);
+      const baseScore = config.score || level * 150;
+      const finalScore = showOverlapHints ? Math.floor(baseScore / 2) : baseScore;
+      setScore((s) => s + finalScore);
       lastSuccessRef.current = true;
       setGameComplete(true);
     } else if (!success) {
@@ -758,19 +773,39 @@ const GenomeAssemblyGame = () => {
           </div>
         </div>
 
-        {/* stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-3 rounded-lg text-center">
-            <div className="text-lg font-bold text-blue-700">{reads.length}</div>
-            <div className="text-xs text-blue-600">Total Reads</div>
-          </div>
-          <div className="bg-green-50 p-3 rounded-lg text-center">
-            <div className="text-lg font-bold text-green-700">{selectedReads.length}</div>
-            <div className="text-xs text-green-600">Selected</div>
-          </div>
-          <div className="bg-purple-50 p-3 rounded-lg text-center">
-            <div className="text-lg font-bold text-purple-700">{targetSequence.length}</div>
-            <div className="text-xs text-purple-600">Target Length</div>
+        {/* level comparison table */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold text-gray-800 mb-3">📊 レベル別情報</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-300">
+                  <th className="text-left py-2 px-2">レベル</th>
+                  <th className="text-center py-2 px-2">Total Reads</th>
+                  <th className="text-center py-2 px-2">Target Length</th>
+                  <th className="text-center py-2 px-2">Max Score</th>
+                  <th className="text-center py-2 px-2">With Hint</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1,2,3,4].map(n => {
+                  const levelConfig = getLevelConfig(n);
+                  const maxScore = levelConfig.score || n * 150;
+                  const hintScore = Math.floor(maxScore / 2);
+                  return (
+                    <tr key={n} className={`border-b border-gray-200 ${level === n ? 'bg-indigo-100' : ''}`}>
+                      <td className="py-2 px-2 font-medium">
+                        {level === n && '👉 '}レベル{n}
+                      </td>
+                      <td className="text-center py-2 px-2">{levelConfig.numReads}</td>
+                      <td className="text-center py-2 px-2">{levelConfig.length}</td>
+                      <td className="text-center py-2 px-2 font-bold text-green-600">{maxScore}</td>
+                      <td className="text-center py-2 px-2 text-orange-600">{hintScore}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -821,10 +856,15 @@ const GenomeAssemblyGame = () => {
         <div className="mb-6 p-4 bg-green-50 rounded-lg">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-800">DNA断片の配置（{selectedReads.length}個） - ドラッグで順番変更（先頭固定）</h3>
-            <button onClick={() => setShowOverlapHints(!showOverlapHints)} 
-              className="flex items-center gap-1 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 rounded text-sm">
+            <button onClick={() => showOverlapHints ? null : setShowHintModal(true)} 
+              disabled={showOverlapHints}
+              className={`flex items-center gap-1 px-3 py-1 rounded text-sm ${
+                showOverlapHints 
+                  ? 'bg-green-200 text-green-800 cursor-default' 
+                  : 'bg-yellow-200 hover:bg-yellow-300 cursor-pointer'
+              }`}>
               <Lightbulb className="w-4 h-4" /> 
-              {showOverlapHints ? 'ヒント非表示' : 'オーバーラップヒント'}
+              {showOverlapHints ? 'ヒント表示中' : 'オーバーラップヒント'}
             </button>
           </div>
 
@@ -916,7 +956,10 @@ const GenomeAssemblyGame = () => {
               <h3 className="text-xl font-bold text-green-800">🎉 レベル{level}クリア！</h3>
             </div>
             <p className="text-green-700 mb-2">類似度 {Math.round(similarity*100)}% で DNA 配列を復元しました！</p>
-            <p className="text-green-600 text-sm mb-3">獲得スコア: {level * 150} 点</p>
+            <p className="text-green-600 text-sm mb-3">
+              獲得スコア: {showOverlapHints ? Math.floor((getLevelConfig(level).score || level * 150) / 2) : (getLevelConfig(level).score || level * 150)} 点
+              {showOverlapHints && <span className="text-orange-600 text-xs ml-1">(ヒント使用により半減)</span>}
+            </p>
             <button onClick={()=> setLevel(level<3 ? level+1 : 1)} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
               {level < 3 ? `レベル${level+1}へ進む` : 'レベル1へ戻る'}
             </button>
@@ -941,6 +984,42 @@ const GenomeAssemblyGame = () => {
             <div>• シードを指定すれば完全再現可能です（seed 表示・入力欄を利用してください）。</div>
           </div>
         </div>
+
+        {/* Hint Modal */}
+        {showHintModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+              <div className="flex items-center gap-2 mb-4">
+                <Lightbulb className="w-6 h-6 text-yellow-600" />
+                <h3 className="text-lg font-bold text-gray-800">オーバーラップヒントについて</h3>
+              </div>
+              <div className="text-sm text-gray-700 space-y-3 mb-6">
+                <p>オーバーラップヒントを表示すると、各DNA断片の重複情報が表示されます。</p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                  <p className="font-semibold text-yellow-800 mb-2">⚠️ 重要な注意事項</p>
+                  <ul className="space-y-1 text-sm">
+                    <li>• 一度ヒントを表示すると、<strong>このゲーム中は非表示にできません</strong></li>
+                    <li>• <strong>獲得スコアが半分になります</strong></li>
+                    <li>• 新しい問題に移った時のみリセットされます</li>
+                  </ul>
+                </div>
+                <p>本当にヒントを表示しますか？</p>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button 
+                  onClick={() => setShowHintModal(false)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors">
+                  キャンセル
+                </button>
+                <button 
+                  onClick={handleShowHints}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition-colors">
+                  ヒントを表示する
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
