@@ -689,14 +689,14 @@ const GenomeAssemblyGame = () => {
   const similarity = assembledSequence ? calculateSimilarity(assembledSequence, targetSequence) : 0;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="max-w-6xl mx-auto p-3 sm:p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <div className="bg-white rounded-lg shadow-lg p-3 sm:p-6">
         {/* header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-indigo-800 mb-2">🧬 ゲノムアセンブリチャレンジ</h1>
-          <p className="text-gray-600">reference から生成した reads を並べ替えて元配列を復元しよう</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-indigo-800 mb-2">🧬 ゲノムアセンブリチャレンジ</h1>
+          <p className="text-sm sm:text-base text-gray-600 px-2">reference から生成した reads を並べ替えて元配列を復元しよう</p>
 
-          <div className="flex justify-center items-center gap-4 mt-4 mb-4">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-4 mb-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 font-medium">レベル選択:</span>
               <div className="flex gap-1">
@@ -709,33 +709,33 @@ const GenomeAssemblyGame = () => {
               </div>
             </div>
 
-            <div className="ml-6 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <input type="text" placeholder="seed (数値)" value={seedInput} onChange={(e)=>setSeedInput(e.target.value)}
-                className="text-xs px-2 py-1 border rounded" />
+                className="text-xs px-2 py-1 border rounded w-24" />
               <button onClick={()=> {
                 const parsed = seedInput.trim()==='' ? getRandomSeed() : Number(seedInput.trim());
                 initGame(parsed);
-              }} className="text-xs px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded">再現</button>
-              <button onClick={()=> { initGame(); setSeedInput(''); }} className="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">ランダム</button>
+              }} className="text-xs px-2 py-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded">再現</button>
+              <button onClick={()=> { initGame(); setSeedInput(''); }} className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">ランダム</button>
             </div>
           </div>
 
-          <div className="flex justify-center items-center gap-4">
-            <span className="bg-indigo-100 px-3 py-1 rounded-full text-sm font-semibold">レベル {level}: {config.description}</span>
-            <span className="bg-green-100 px-3 py-1 rounded-full text-sm font-semibold">スコア: {score}</span>
-            <span className="bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-700">Seed: {seed ?? '—'}</span>
+          <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4">
+            <span className="bg-indigo-100 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">レベル {level}</span>
+            <span className="bg-green-100 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">スコア: {score}</span>
+            <span className="bg-gray-100 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700">Seed: {seed ?? '—'}</span>
           </div>
         </div>
 
         {/* ゲーム説明 */}
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-bold">?</span>
             </div>
             <h3 className="font-semibold text-blue-800">ゲノムアセンブリとは？</h3>
           </div>
-          <div className="text-sm text-blue-700 space-y-3">
+          <div className="text-xs sm:text-sm text-blue-700 space-y-3">
             <p><strong>📖 ゲノムアセンブリ：</strong>長いDNA配列を短い断片（read）から復元する作業です。現実のDNAシーケンシング技術では、長い配列を一度に読めないため、短い断片に分解してから元の配列を復元します。</p>
             
             <p><strong>🧬 Read（リード）：</strong>DNAシーケンサーが読み取った短いDNA断片のことです。元の長い配列の一部分を切り出したものです。</p>
@@ -743,11 +743,11 @@ const GenomeAssemblyGame = () => {
             <div className="p-3 bg-white rounded border">
               <h4 className="font-semibold text-blue-800 mb-2">🔗 オーバーラップとは？</h4>
               <p className="mb-2">隣り合うDNA断片には<strong>「重複部分」</strong>があります。これがオーバーラップです。</p>
-              <div className="font-mono text-xs bg-gray-100 p-2 rounded mb-2">
-                <div>元の配列: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
-                <div className="mt-1">断片1: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold bg-yellow-200">GT</span></div>
-                <div>断片2: <span className="text-red-600 font-bold bg-yellow-200">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
-                <div className="mt-1 text-red-600">↑ <strong>GT</strong> がオーバーラップ（重複部分）</div>
+              <div className="font-mono text-xs bg-gray-100 p-2 rounded mb-2 overflow-x-auto">
+                <div className="whitespace-nowrap">元の配列: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
+                <div className="mt-1 whitespace-nowrap">断片1: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold bg-yellow-200">GT</span></div>
+                <div className="whitespace-nowrap">断片2: <span className="text-red-600 font-bold bg-yellow-200">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
+                <div className="mt-1 text-red-600 whitespace-nowrap">↑ <strong>GT</strong> がオーバーラップ（重複部分）</div>
               </div>
               <p className="text-xs">💡 <strong>コツ：</strong>断片の末尾と次の断片の先頭が同じ文字列になる順番を見つけよう！</p>
             </div>
@@ -774,10 +774,10 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* level comparison table */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-gray-800 mb-3">📊 レベル別情報</h3>
+        <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">📊 レベル別情報</h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-gray-300">
                   <th className="text-left py-2 px-2">レベル</th>
@@ -810,14 +810,14 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* target */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">目標配列</h3>
-            <button onClick={()=>setShowTarget(!showTarget)} className="flex items-center gap-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
-              {showTarget ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} {showTarget ? '隠す' : '表示'}
+            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">目標配列</h3>
+            <button onClick={()=>setShowTarget(!showTarget)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs sm:text-sm">
+              {showTarget ? <EyeOff className="w-3 sm:w-4 h-3 sm:h-4" /> : <Eye className="w-3 sm:w-4 h-3 sm:h-4" />} {showTarget ? '隠す' : '表示'}
             </button>
           </div>
-          <div className="font-mono text-sm bg-white p-3 rounded border break-words">
+          <div className="font-mono text-xs sm:text-sm bg-white p-3 rounded border break-all overflow-x-auto">
             {showTarget ? (
               targetSequence.split("").map((b,i)=>(
                 <span key={i} className={`${b==='A'?'text-red-600':''} ${b==='T'?'text-blue-600':''} ${b==='G'?'text-green-600':''} ${b==='C'?'text-purple-600':''} font-bold`}>{b}</span>
@@ -829,10 +829,10 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* assembled */}
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">アセンブル結果</h3>
-            <div className="text-sm text-gray-600">
+        <div className="mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">アセンブル結果</h3>
+            <div className="text-xs sm:text-sm text-gray-600">
               類似度: {Math.round(similarity*100)}% | 長さ: {assembledSequence.length}
               {selectedReads.length>0 && (
                 <span className="ml-2 text-green-600 font-semibold">
@@ -841,7 +841,7 @@ const GenomeAssemblyGame = () => {
               )}
             </div>
           </div>
-          <div className="font-mono text-sm bg-white p-3 rounded border break-words">
+          <div className="font-mono text-xs sm:text-sm bg-white p-3 rounded border break-all overflow-x-auto">
             {assembledSequence ? (
               assembledSequence.split("").map((b,i)=>(
                 <span key={i} className={`${b==='A'?'text-red-600':''} ${b==='T'?'text-blue-600':''} ${b==='G'?'text-green-600':''} ${b==='C'?'text-purple-600':''} font-bold`}>{b}</span>
@@ -853,23 +853,23 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* selected reads */}
-        <div className="mb-6 p-4 bg-green-50 rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">DNA断片の配置（{selectedReads.length}個） - ドラッグで順番変更（先頭固定）</h3>
+        <div className="mb-6 p-3 sm:p-4 bg-green-50 rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">DNA断片の配置（{selectedReads.length}個） - ドラッグで順番変更（先頭固定）</h3>
             <button onClick={() => showOverlapHints ? null : setShowHintModal(true)} 
               disabled={showOverlapHints}
-              className={`flex items-center gap-1 px-3 py-1 rounded text-sm ${
+              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                 showOverlapHints 
                   ? 'bg-green-200 text-green-800 cursor-default' 
                   : 'bg-yellow-200 hover:bg-yellow-300 cursor-pointer'
               }`}>
-              <Lightbulb className="w-4 h-4" /> 
-              {showOverlapHints ? 'ヒント表示中' : 'オーバーラップヒント'}
+              <Lightbulb className="w-3 sm:w-4 h-3 sm:h-4" /> 
+              {showOverlapHints ? 'ヒント表示中' : 'ヒント'}
             </button>
           </div>
 
           {selectedReads.length>0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+            <div className="grid grid-cols-1 gap-2 mb-4">
               {selectedReads.map((read, index) => (
                 <div key={`${read.id}-${index}`}
                   data-read-index={index}
@@ -883,16 +883,16 @@ const GenomeAssemblyGame = () => {
                   onTouchMove={index!==0 ? (e)=>handleTouchMove(e,index) : undefined}
                   onTouchEnd={index!==0 ? (e)=>handleTouchEnd(e,index) : undefined}
                   className={`relative transition-all duration-200 ${index===0 ? 'cursor-not-allowed bg-gray-100' : 'cursor-move touch-none'} ${draggedIndex===index ? 'opacity-50 scale-95' : ''} ${dragOverIndex===index ? 'transform translate-y-1' : ''}`}>
-                  <div className={`h-full p-2 rounded-lg font-mono text-xs border text-left ${index===0 ? 'bg-blue-200 border-blue-400' : 'bg-green-200'}`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
+                  <div className={`h-full p-2 sm:p-3 rounded-lg font-mono text-xs border text-left ${index===0 ? 'bg-blue-200 border-blue-400' : 'bg-green-200'}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                         <span className="text-xs text-gray-600">Read {index+1} {index===0? '(固定)':''}</span>
-                        <span className="text-xs text-blue-600 font-semibold">{read.isReverse ? "3'→5' (逆鎖)" : "5'→3' (正鎖)"}</span>
+                        <span className="text-xs text-blue-600 font-semibold">{read.isReverse ? "3'→5'" : "5'→3'"}</span>
                       </div>
                       <span className="text-xs text-gray-500">{read.length}bp {read.hasError ? '⚠️' : ''}</span>
                     </div>
 
-                    <div className="break-words">
+                    <div className="break-all overflow-x-auto">
                       {read.displaySeq.split("").map((b,i)=>(
                         <span key={i} className={`${b==='A'?'text-red-700':''} ${b==='T'?'text-blue-700':''} ${b==='G'?'text-green-700':''} ${b==='C'?'text-purple-700':''} font-bold`}>{b}</span>
                       ))}
@@ -907,13 +907,14 @@ const GenomeAssemblyGame = () => {
                     )}
 
                     {/* memo */}
-                    <div className="mt-1 relative">
+                    <div className="mt-2 relative">
                       <button onClick={()=> setShowMemoInput(showMemoInput===read.id? null : read.id)}
                         className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${readMemos[read.id] ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                         <StickyNote className="w-3 h-3" />
-                        {readMemos[read.id] ? 'メモ編集' : 'メモ追加'}
+                        <span className="hidden sm:inline">{readMemos[read.id] ? 'メモ編集' : 'メモ追加'}</span>
+                        <span className="sm:hidden">メモ</span>
                       </button>
-                      {readMemos[read.id] && <div className="mt-1 px-2 py-1 bg-blue-100 rounded text-xs text-blue-800">📝 {readMemos[read.id]}</div>}
+                      {readMemos[read.id] && <div className="mt-1 px-2 py-1 bg-blue-100 rounded text-xs text-blue-800 break-words">📝 {readMemos[read.id]}</div>}
                       {showMemoInput === read.id && (
                         <div className="absolute top-full left-0 right-0 z-10 mt-1 p-2 bg-white border-2 border-blue-300 rounded-lg shadow-lg">
                           <input type="text" placeholder="メモ（例：左端候補、overlap 8bp）"
@@ -950,32 +951,32 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {gameComplete && (
-          <div className="mb-6 p-4 bg-green-100 border-2 border-green-400 rounded-lg text-center">
+          <div className="mb-6 p-3 sm:p-4 bg-green-100 border-2 border-green-400 rounded-lg text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-              <h3 className="text-xl font-bold text-green-800">🎉 レベル{level}クリア！</h3>
+              <CheckCircle className="w-5 sm:w-6 h-5 sm:h-6 text-green-600" />
+              <h3 className="text-lg sm:text-xl font-bold text-green-800">🎉 レベル{level}クリア！</h3>
             </div>
-            <p className="text-green-700 mb-2">類似度 {Math.round(similarity*100)}% で DNA 配列を復元しました！</p>
-            <p className="text-green-600 text-sm mb-3">
+            <p className="text-green-700 mb-2 text-sm sm:text-base">類似度 {Math.round(similarity*100)}% で DNA 配列を復元しました！</p>
+            <p className="text-green-600 text-xs sm:text-sm mb-3">
               獲得スコア: {showOverlapHints ? Math.floor((getLevelConfig(level).score || level * 150) / 2) : (getLevelConfig(level).score || level * 150)} 点
               {showOverlapHints && <span className="text-orange-600 text-xs ml-1">(ヒント使用により半減)</span>}
             </p>
-            <button onClick={()=> setLevel(level<3 ? level+1 : 1)} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
+            <button onClick={()=> setLevel(level<3 ? level+1 : 1)} className="px-4 sm:px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base">
               {level < 3 ? `レベル${level+1}へ進む` : 'レベル1へ戻る'}
             </button>
           </div>
         )}
 
-        <div className="flex justify-center gap-4">
-          <button onClick={reset} className="flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+        <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
+          <button onClick={reset} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
             <RotateCcw className="w-4 h-4" /> リセット
           </button>
-          <button onClick={() => initGame()} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors">
+          <button onClick={() => initGame()} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm">
             <Shuffle className="w-4 h-4" /> 新しい問題
           </button>
         </div>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+        <div className="mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-600">
           <h4 className="font-semibold mb-2">💡 補足</h4>
           <div className="space-y-1">
             <div>• 各 read の overlap は read 自身のプロパティとして保持されます（overlapWithPrev/Next）。</div>
@@ -987,17 +988,17 @@ const GenomeAssemblyGame = () => {
 
         {/* Hint Modal */}
         {showHintModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="w-6 h-6 text-yellow-600" />
-                <h3 className="text-lg font-bold text-gray-800">オーバーラップヒントについて</h3>
+                <Lightbulb className="w-5 sm:w-6 h-5 sm:h-6 text-yellow-600" />
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">オーバーラップヒントについて</h3>
               </div>
-              <div className="text-sm text-gray-700 space-y-3 mb-6">
+              <div className="text-xs sm:text-sm text-gray-700 space-y-3 mb-6">
                 <p>オーバーラップヒントを表示すると、各DNA断片の重複情報が表示されます。</p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
                   <p className="font-semibold text-yellow-800 mb-2">⚠️ 重要な注意事項</p>
-                  <ul className="space-y-1 text-sm">
+                  <ul className="space-y-1 text-xs sm:text-sm">
                     <li>• 一度ヒントを表示すると、<strong>このゲーム中は非表示にできません</strong></li>
                     <li>• <strong>獲得スコアが半分になります</strong></li>
                     <li>• 新しい問題に移った時のみリセットされます</li>
@@ -1005,15 +1006,15 @@ const GenomeAssemblyGame = () => {
                 </div>
                 <p>本当にヒントを表示しますか？</p>
               </div>
-              <div className="flex gap-3 justify-end">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
                 <button 
                   onClick={() => setShowHintModal(false)}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors">
+                  className="px-3 sm:px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded transition-colors text-sm">
                   キャンセル
                 </button>
                 <button 
                   onClick={handleShowHints}
-                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition-colors">
+                  className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition-colors text-sm">
                   ヒントを表示する
                 </button>
               </div>
