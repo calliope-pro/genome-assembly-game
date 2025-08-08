@@ -1121,7 +1121,6 @@ const GenomeAssemblyGame = () => {
         <div className="mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-600">
           <h4 className="font-semibold mb-2">💡 補足</h4>
           <div className="space-y-1">
-            <div>• 各 read の overlap は read 自身のプロパティとして保持されます（overlapWithPrev/Next）。</div>
             <div>• overlap 部分は reference に由来しているため、エラーは入りません（必ず一致）。</div>
             <div>• アセンブリは forwardSeq（reference向き）を使って正しくマージします。表示は逆鎖の見た目をサポートします。</div>
             <div>• シードを指定すれば完全再現可能です（seed 表示・入力欄を利用してください）。</div>
