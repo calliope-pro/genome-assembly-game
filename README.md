@@ -40,4 +40,12 @@ npm run dev
 
 ## 📄 ライセンス
 
-MIT License
+BSD 3-Clause License
+
+このゲームは**自由に使えます**！学習、研究、商用利用すべてOKです。
+
+**ただし以下のルールを守ってください：**
+- このゲームを使う時は「作者: https://github.com/calliope-pro」と表示してください
+- 作者の名前を勝手に宣伝に使わないでください
+
+詳しくは[LICENSE](./LICENSE)ファイルをお読みください。
