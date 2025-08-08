@@ -28,7 +28,6 @@ const GenomeAssemblyGame = () => {
   const [gameComplete, setGameComplete] = useState(false);
   const [score, setScore] = useState(0);
   const [showTarget, setShowTarget] = useState(false);
-  const [showHints, setShowHints] = useState(true);
   const [showOverlapHints, setShowOverlapHints] = useState(false);
   const [readMemos, setReadMemos] = useState({});
   const [showMemoInput, setShowMemoInput] = useState(null);
@@ -583,6 +582,58 @@ const GenomeAssemblyGame = () => {
     setDragOverIndex(null);
   };
 
+  // ---------- touch events for mobile support ----------
+  const handleTouchStart = (e, index) => {
+    if (index === 0) return;
+    e.preventDefault();
+    setDraggedIndex(index);
+    
+    // Store initial touch position
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.dataset.startY = touch.clientY;
+    e.currentTarget.dataset.initialTop = rect.top;
+  };
+
+  const handleTouchMove = (e, currentIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || currentIndex === 0) return;
+    
+    const touch = e.touches[0];
+    const elements = document.querySelectorAll('[data-read-index]');
+    
+    // Find which element the touch is over
+    let targetIndex = null;
+    elements.forEach((el, idx) => {
+      const rect = el.getBoundingClientRect();
+      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom && 
+          touch.clientX >= rect.left && touch.clientX <= rect.right) {
+        targetIndex = parseInt(el.dataset.readIndex);
+      }
+    });
+    
+    if (targetIndex !== null && targetIndex !== 0) {
+      setDragOverIndex(targetIndex);
+    }
+  };
+
+  const handleTouchEnd = (e, currentIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || currentIndex === 0) return;
+    
+    // Perform the drop if we have a valid target
+    if (dragOverIndex !== null && dragOverIndex !== draggedIndex && dragOverIndex !== 0) {
+      const newOrder = [...selectedReads];
+      const dragged = newOrder[draggedIndex];
+      newOrder.splice(draggedIndex, 1);
+      newOrder.splice(dragOverIndex, 0, dragged);
+      setSelectedReads(newOrder);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   // ---------- effect: recompute assembly when selectedReads or target changes ----------
   useEffect(() => {
     if (!selectedReads || selectedReads.length === 0 || !targetSequence) {
@@ -661,24 +712,54 @@ const GenomeAssemblyGame = () => {
           </div>
         </div>
 
-        {/* hints */}
-        {showHints && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-5 h-5 text-yellow-600" />
-              <h3 className="font-semibold text-yellow-800">ヒント</h3>
-              <button onClick={()=>setShowHints(false)} className="ml-auto text-yellow-600 hover:text-yellow-800 text-sm">×</button>
+        {/* ゲーム説明 */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-bold">?</span>
             </div>
-            <div className="text-sm text-yellow-700">
-              <div>• 各 read は reference から生成され、隣接 read 間の overlap 長を持ちます。</div>
-              <div>• overlap 部分は reference 由来で、エラー注入から保護されています（必ず一致します）。</div>
-              <div>• アセンブリは内部的に forwardSeq（reference向き）で結合します。表示は逆鎖の場合に見た目だけ反転します。</div>
+            <h3 className="font-semibold text-blue-800">ゲノムアセンブリとは？</h3>
+          </div>
+          <div className="text-sm text-blue-700 space-y-3">
+            <p><strong>📖 ゲノムアセンブリ：</strong>長いDNA配列を短い断片（read）から復元する作業です。現実のDNAシーケンシング技術では、長い配列を一度に読めないため、短い断片に分解してから元の配列を復元します。</p>
+            
+            <p><strong>🧬 Read（リード）：</strong>DNAシーケンサーが読み取った短いDNA断片のことです。元の長い配列の一部分を切り出したものです。</p>
+            
+            <div className="p-3 bg-white rounded border">
+              <h4 className="font-semibold text-blue-800 mb-2">🔗 オーバーラップとは？</h4>
+              <p className="mb-2">隣り合うDNA断片には<strong>「重複部分」</strong>があります。これがオーバーラップです。</p>
+              <div className="font-mono text-xs bg-gray-100 p-2 rounded mb-2">
+                <div>元の配列: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
+                <div className="mt-1">断片1: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold bg-yellow-200">GT</span></div>
+                <div>断片2: <span className="text-red-600 font-bold bg-yellow-200">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
+                <div className="mt-1 text-red-600">↑ <strong>GT</strong> がオーバーラップ（重複部分）</div>
+              </div>
+              <p className="text-xs">💡 <strong>コツ：</strong>断片の末尾と次の断片の先頭が同じ文字列になる順番を見つけよう！</p>
+            </div>
+            
+            <div className="mt-3 p-3 bg-white rounded border-l-4 border-blue-400">
+              <h4 className="font-semibold text-blue-800 mb-2">🎮 遊び方：</h4>
+              <div className="space-y-2">
+                <div>1️⃣ <strong>DNA断片を並び替え：</strong>画面下部のDNA断片をドラッグして正しい順序に配置</div>
+                <div>2️⃣ <strong>オーバーラップを探す：</strong>断片Aの末尾と断片Bの先頭が同じになる組み合わせを探す</div>
+                <div>3️⃣ <strong>つなげる：</strong>重複部分は1回だけ使って元の長い配列を復元</div>
+                <div>4️⃣ <strong>成功：</strong>目標配列と一致すればクリア！レベルアップして次の挑戦へ</div>
+              </div>
+            </div>
+            
+            <div className="mt-3 flex flex-wrap gap-4 text-xs">
+              <div><span className="inline-block w-3 h-3 bg-red-500 rounded mr-1"></span><strong>A</strong>=赤</div>
+              <div><span className="inline-block w-3 h-3 bg-blue-500 rounded mr-1"></span><strong>T</strong>=青</div>
+              <div><span className="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span><strong>G</strong>=緑</div>
+              <div><span className="inline-block w-3 h-3 bg-purple-500 rounded mr-1"></span><strong>C</strong>=紫</div>
+              <div><strong>⚠️</strong>=エラーあり</div>
+              <div><strong>↺</strong>=逆鎖（3'→5'）</div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-blue-50 p-3 rounded-lg text-center">
             <div className="text-lg font-bold text-blue-700">{reads.length}</div>
             <div className="text-xs text-blue-600">Total Reads</div>
@@ -690,10 +771,6 @@ const GenomeAssemblyGame = () => {
           <div className="bg-purple-50 p-3 rounded-lg text-center">
             <div className="text-lg font-bold text-purple-700">{targetSequence.length}</div>
             <div className="text-xs text-purple-600">Target Length</div>
-          </div>
-          <div className="bg-orange-50 p-3 rounded-lg text-center">
-            <div className="text-lg font-bold text-orange-700">{Math.round(similarity*100)}%</div>
-            <div className="text-xs text-orange-600">Similarity</div>
           </div>
         </div>
 
@@ -755,13 +832,17 @@ const GenomeAssemblyGame = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
               {selectedReads.map((read, index) => (
                 <div key={`${read.id}-${index}`}
+                  data-read-index={index}
                   draggable={index!==0}
                   onDragStart={index!==0 ? (e)=>handleDragStart(e,index) : undefined}
                   onDragOver={index!==0 ? (e)=>handleDragOver(e,index) : undefined}
                   onDragLeave={index!==0 ? handleDragLeave : undefined}
                   onDrop={index!==0 ? (e)=>handleDrop(e,index) : undefined}
                   onDragEnd={index!==0 ? handleDragEnd : undefined}
-                  className={`relative transition-all duration-200 ${index===0 ? 'cursor-not-allowed bg-gray-100' : 'cursor-move'} ${draggedIndex===index ? 'opacity-50 scale-95' : ''} ${dragOverIndex===index ? 'transform translate-y-1' : ''}`}>
+                  onTouchStart={index!==0 ? (e)=>handleTouchStart(e,index) : undefined}
+                  onTouchMove={index!==0 ? (e)=>handleTouchMove(e,index) : undefined}
+                  onTouchEnd={index!==0 ? (e)=>handleTouchEnd(e,index) : undefined}
+                  className={`relative transition-all duration-200 ${index===0 ? 'cursor-not-allowed bg-gray-100' : 'cursor-move touch-none'} ${draggedIndex===index ? 'opacity-50 scale-95' : ''} ${dragOverIndex===index ? 'transform translate-y-1' : ''}`}>
                   <div className={`h-full p-2 rounded-lg font-mono text-xs border text-left ${index===0 ? 'bg-blue-200 border-blue-400' : 'bg-green-200'}`}>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
