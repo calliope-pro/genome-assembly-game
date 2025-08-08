@@ -694,7 +694,7 @@ const GenomeAssemblyGame = () => {
         {/* header */}
         <div className="text-center mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-indigo-800 mb-2">🧬 ゲノムアセンブリチャレンジ</h1>
-          <p className="text-sm sm:text-base text-gray-600 px-2">reference から生成した reads を並べ替えて元配列を復元しよう</p>
+          <p className="text-sm sm:text-base text-gray-600 px-2">完全なDNA配列を復元しよう！</p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-4 mb-4">
             <div className="flex items-center gap-2">
@@ -858,13 +858,13 @@ const GenomeAssemblyGame = () => {
             <h3 className="font-semibold text-gray-800 text-sm sm:text-base">DNA断片の配置（{selectedReads.length}個） - ドラッグで順番変更（先頭固定）</h3>
             <button onClick={() => showOverlapHints ? null : setShowHintModal(true)} 
               disabled={showOverlapHints}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium transition-all text-xs sm:text-sm border ${
                 showOverlapHints 
-                  ? 'bg-green-200 text-green-800 cursor-default' 
-                  : 'bg-yellow-200 hover:bg-yellow-300 cursor-pointer'
+                  ? 'bg-green-500 text-white border-green-600 cursor-default shadow-sm' 
+                  : 'bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-600 cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105'
               }`}>
-              <Lightbulb className="w-3 sm:w-4 h-3 sm:h-4" /> 
-              {showOverlapHints ? 'ヒント表示中' : 'ヒント'}
+              <Lightbulb className="w-4 h-4" /> 
+              {showOverlapHints ? 'ヒント表示中' : 'ヒントを見る'}
             </button>
           </div>
 
