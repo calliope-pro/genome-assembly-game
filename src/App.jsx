@@ -144,10 +144,14 @@ const GenomeAssemblyGame = () => {
 
   // ---------- utility: avoid ambiguous overlaps ----------
   const checkAmbiguousOverlap = (sequence) => {
-    if (!sequence || sequence.length < 3) return true;
+    if (!sequence || sequence.length < 3) return false;
+    
+    // Only reject if it's a single character repeated (like AAAA or GGG)
     const first = sequence[0];
     if (sequence.split("").every((c) => c === first)) return true;
-    if (sequence.length >= 4) {
+    
+    // For 2-character pattern repeats, only reject if pattern repeats 3+ times (6+ chars)
+    if (sequence.length >= 6) {
       const patt = sequence.slice(0, 2);
       let isRepeating = true;
       for (let i = 0; i < sequence.length; i += 2) {
@@ -158,6 +162,7 @@ const GenomeAssemblyGame = () => {
       }
       if (isRepeating) return true;
     }
+    
     return false;
   };
 
@@ -217,24 +222,43 @@ const GenomeAssemblyGame = () => {
     return forwardSeq.substring(0, pos) + wrong + forwardSeq.substring(pos + 1);
   };
 
-  // ---------- findBestOverlap: prefer declaredOverlap if matches; otherwise search largest non-ambiguous overlap ----------
+  // ---------- findBestOverlap: robust overlap detection ----------
   const findBestOverlap = (prevSeq, currSeq, declaredOverlap = null, minOverlap = 3, maxSearch = 500) => {
+    if (!prevSeq || !currSeq) return 0;
+    
     const limit = Math.min(maxSearch, prevSeq.length, currSeq.length);
+    
+    // First try declared overlap if provided and valid
     if (declaredOverlap && declaredOverlap >= minOverlap && declaredOverlap <= limit) {
       const suffix = prevSeq.slice(-declaredOverlap);
       const prefix = currSeq.slice(0, declaredOverlap);
-      if (suffix === prefix && !checkAmbiguousOverlap(suffix)) {
-        return declaredOverlap;
+      if (suffix === prefix) {
+        // Only reject if it's truly ambiguous (single character repeats of 4+ chars)
+        if (!checkAmbiguousOverlap(suffix)) {
+          return declaredOverlap;
+        }
       }
     }
+    
+    // Search for best overlap from longest to shortest
+    let bestOverlap = 0;
     for (let k = limit; k >= minOverlap; k--) {
       const suffix = prevSeq.slice(-k);
       const prefix = currSeq.slice(0, k);
-      if (suffix === prefix && !checkAmbiguousOverlap(suffix)) {
-        return k;
+      if (suffix === prefix) {
+        // Accept any matching overlap unless it's truly problematic
+        if (!checkAmbiguousOverlap(suffix)) {
+          bestOverlap = k;
+          break;
+        }
+        // Even if ambiguous, keep track of it as potential fallback
+        if (bestOverlap === 0) {
+          bestOverlap = k;
+        }
       }
     }
-    return 0;
+    
+    return bestOverlap;
   };
 
   // ---------- generate reads from reference with reproducible overlap distribution ----------
