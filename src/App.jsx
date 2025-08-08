@@ -34,8 +34,129 @@ const GenomeAssemblyGame = () => {
   const [showMemoInput, setShowMemoInput] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [colorPalette, setColorPalette] = useState('science');
 
   const lastSuccessRef = useRef(false);
+
+  // ---------- color palettes ----------
+  const colorPalettes = {
+    science: {
+      name: '🔬 サイエンス',
+      bg: 'from-blue-50 to-indigo-100',
+      title: 'text-indigo-800',
+      primary: 'bg-indigo-600',
+      primaryHover: 'hover:bg-indigo-700',
+      secondary: 'bg-indigo-500',
+      secondaryHover: 'hover:bg-indigo-600',
+      accent: 'bg-indigo-100',
+      border: 'border-indigo-400',
+      complement: 'bg-orange-500',
+      complementHover: 'hover:bg-orange-600',
+      complementAccent: 'bg-orange-100',
+      complementBorder: 'border-orange-400',
+      vibrant: 'bg-cyan-500',
+      vibrantAccent: 'bg-cyan-100',
+      vibrantBorder: 'border-cyan-400',
+      vibrantText: 'text-cyan-700'
+    },
+    bio: {
+      name: '🧬 バイオ',
+      bg: 'from-green-50 to-emerald-100',
+      title: 'text-emerald-800',
+      primary: 'bg-emerald-600',
+      primaryHover: 'hover:bg-emerald-700',
+      secondary: 'bg-emerald-500',
+      secondaryHover: 'hover:bg-emerald-600',
+      accent: 'bg-emerald-100',
+      border: 'border-emerald-400',
+      complement: 'bg-pink-500',
+      complementHover: 'hover:bg-pink-600',
+      complementAccent: 'bg-pink-100',
+      complementBorder: 'border-pink-400',
+      vibrant: 'bg-violet-500',
+      vibrantAccent: 'bg-violet-100',
+      vibrantBorder: 'border-violet-400',
+      vibrantText: 'text-violet-700'
+    },
+    energy: {
+      name: '🔥 エネルギッシュ',
+      bg: 'from-orange-50 to-red-100',
+      title: 'text-red-800',
+      primary: 'bg-red-600',
+      primaryHover: 'hover:bg-red-700',
+      secondary: 'bg-orange-500',
+      secondaryHover: 'hover:bg-orange-600',
+      accent: 'bg-orange-100',
+      border: 'border-red-400',
+      complement: 'bg-blue-500',
+      complementHover: 'hover:bg-blue-600',
+      complementAccent: 'bg-blue-100',
+      complementBorder: 'border-blue-400',
+      vibrant: 'bg-yellow-500',
+      vibrantAccent: 'bg-yellow-100',
+      vibrantBorder: 'border-yellow-400',
+      vibrantText: 'text-yellow-700'
+    },
+    cool: {
+      name: '🌊 クール',
+      bg: 'from-cyan-50 to-blue-100',
+      title: 'text-blue-800',
+      primary: 'bg-blue-600',
+      primaryHover: 'hover:bg-blue-700',
+      secondary: 'bg-cyan-500',
+      secondaryHover: 'hover:bg-cyan-600',
+      accent: 'bg-cyan-100',
+      border: 'border-blue-400',
+      complement: 'bg-orange-500',
+      complementHover: 'hover:bg-orange-600',
+      complementAccent: 'bg-orange-100',
+      complementBorder: 'border-orange-400',
+      vibrant: 'bg-emerald-500',
+      vibrantAccent: 'bg-emerald-100',
+      vibrantBorder: 'border-emerald-400',
+      vibrantText: 'text-emerald-700'
+    },
+    gamer: {
+      name: '🎮 ゲーマー',
+      bg: 'from-purple-50 to-pink-100',
+      title: 'text-purple-800',
+      primary: 'bg-purple-600',
+      primaryHover: 'hover:bg-purple-700',
+      secondary: 'bg-pink-500',
+      secondaryHover: 'hover:bg-pink-600',
+      accent: 'bg-purple-100',
+      border: 'border-purple-400',
+      complement: 'bg-yellow-500',
+      complementHover: 'hover:bg-yellow-600',
+      complementAccent: 'bg-yellow-100',
+      complementBorder: 'border-yellow-400',
+      vibrant: 'bg-lime-500',
+      vibrantAccent: 'bg-lime-100',
+      vibrantBorder: 'border-lime-400',
+      vibrantText: 'text-lime-700'
+    },
+    tech: {
+      name: '⚡ テック',
+      bg: 'from-slate-50 to-gray-100',
+      title: 'text-slate-800',
+      primary: 'bg-slate-600',
+      primaryHover: 'hover:bg-slate-700',
+      secondary: 'bg-zinc-500',
+      secondaryHover: 'hover:bg-zinc-600',
+      accent: 'bg-slate-100',
+      border: 'border-slate-400',
+      complement: 'bg-amber-500',
+      complementHover: 'hover:bg-amber-600',
+      complementAccent: 'bg-amber-100',
+      complementBorder: 'border-amber-400',
+      vibrant: 'bg-blue-500',
+      vibrantAccent: 'bg-blue-100',
+      vibrantBorder: 'border-blue-400',
+      vibrantText: 'text-blue-700'
+    }
+  };
+
+  const currentColors = colorPalettes[colorPalette];
 
   // ---------- seeded RNG (32-bit LCG) ----------
   const createSeededRandom = (s) => {
@@ -689,11 +810,11 @@ const GenomeAssemblyGame = () => {
   const similarity = assembledSequence ? calculateSimilarity(assembledSequence, targetSequence) : 0;
 
   return (
-    <div className="max-w-6xl mx-auto p-3 sm:p-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div className={`max-w-6xl mx-auto p-3 sm:p-6 bg-gradient-to-br ${currentColors.bg} min-h-screen`}>
       <div className="bg-white rounded-lg shadow-lg p-3 sm:p-6">
         {/* header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-indigo-800 mb-2">🧬 ゲノムアセンブリチャレンジ</h1>
+          <h1 className={`text-2xl sm:text-3xl font-bold ${currentColors.title} mb-2`}>🧬 ゲノムアセンブリチャレンジ</h1>
           <p className="text-sm sm:text-base text-gray-600 px-2">完全なDNA配列を復元しよう！</p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-4 mb-4">
@@ -702,7 +823,7 @@ const GenomeAssemblyGame = () => {
               <div className="flex gap-1">
                 {[1,2,3,4].map(n=>(
                   <button key={n} onClick={()=>setLevel(n)}
-                    className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors ${level===n ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+                    className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors ${level===n ? `${currentColors.primary} text-white` : `${currentColors.accent} text-gray-700 hover:bg-gray-200`}`}>
                     {n}
                   </button>
                 ))}
@@ -715,33 +836,54 @@ const GenomeAssemblyGame = () => {
               <button onClick={()=> {
                 const parsed = seedInput.trim()==='' ? getRandomSeed() : Number(seedInput.trim());
                 initGame(parsed);
-              }} className="text-xs px-2 py-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded">再現</button>
+              }} className={`text-xs px-2 py-1 ${currentColors.secondary} ${currentColors.secondaryHover} text-white rounded`}>再現</button>
               <button onClick={()=> { initGame(); setSeedInput(''); }} className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">ランダム</button>
             </div>
           </div>
 
           <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4">
-            <span className="bg-indigo-100 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">レベル {level}</span>
-            <span className="bg-green-100 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">スコア: {score}</span>
+            <span className={`${currentColors.accent} px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold`}>レベル {level}</span>
+            <span className={`${currentColors.complementAccent} ${currentColors.complementBorder} border px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold`}>スコア: {score}</span>
             <span className="bg-gray-100 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700">Seed: {seed ?? '—'}</span>
+          </div>
+
+          {/* Color Palette Selector */}
+          <div className="mt-4 flex flex-wrap justify-center items-center gap-3">
+            <span className="text-xs text-gray-600 font-medium">カラー:</span>
+            <div className="flex gap-2">
+              {Object.entries(colorPalettes).map(([key, palette]) => (
+                <button
+                  key={key}
+                  onClick={() => setColorPalette(key)}
+                  className={`w-8 h-8 rounded-full transition-all ${palette.primary} hover:scale-110 ${
+                    colorPalette === key
+                      ? 'ring-4 ring-gray-400 ring-offset-2'
+                      : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-1'
+                  }`}
+                  title={palette.name}
+                >
+                  <span className="sr-only">{palette.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* ゲーム説明 */}
-        <div className="mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className={`mb-6 p-3 sm:p-4 ${currentColors.accent} border ${currentColors.border} rounded-lg`}>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className={`w-6 h-6 ${currentColors.primary} rounded-full flex items-center justify-center`}>
               <span className="text-white text-sm font-bold">?</span>
             </div>
-            <h3 className="font-semibold text-blue-800">ゲノムアセンブリとは？</h3>
+            <h3 className={`font-semibold ${currentColors.title}`}>ゲノムアセンブリとは？</h3>
           </div>
-          <div className="text-xs sm:text-sm text-blue-700 space-y-3">
+          <div className={`text-xs sm:text-sm ${currentColors.title.replace('800', '700')} space-y-3`}>
             <p><strong>📖 ゲノムアセンブリ：</strong>長いDNA配列を短い断片（read）から復元する作業です。現実のDNAシーケンシング技術では、長い配列を一度に読めないため、短い断片に分解してから元の配列を復元します。</p>
             
             <p><strong>🧬 Read（リード）：</strong>DNAシーケンサーが読み取った短いDNA断片のことです。元の長い配列の一部分を切り出したものです。</p>
             
             <div className="p-3 bg-white rounded border">
-              <h4 className="font-semibold text-blue-800 mb-2">🔗 オーバーラップとは？</h4>
+              <h4 className={`font-semibold ${currentColors.title} mb-2`}>🔗 オーバーラップとは？</h4>
               <p className="mb-2">隣り合うDNA断片には<strong>「重複部分」</strong>があります。これがオーバーラップです。</p>
               <div className="font-mono text-xs bg-gray-100 p-2 rounded mb-2 overflow-x-auto">
                 <div className="whitespace-nowrap">元の配列: <span className="text-green-600 font-bold">ATCG</span><span className="text-red-600 font-bold">GT</span><span className="text-blue-600 font-bold">TACG</span></div>
@@ -752,8 +894,8 @@ const GenomeAssemblyGame = () => {
               <p className="text-xs">💡 <strong>コツ：</strong>断片の末尾と次の断片の先頭が同じ文字列になる順番を見つけよう！</p>
             </div>
             
-            <div className="mt-3 p-3 bg-white rounded border-l-4 border-blue-400">
-              <h4 className="font-semibold text-blue-800 mb-2">🎮 遊び方：</h4>
+            <div className={`mt-3 p-3 bg-white rounded border-l-4 ${currentColors.border}`}>
+              <h4 className={`font-semibold ${currentColors.title} mb-2`}>🎮 遊び方：</h4>
               <div className="space-y-2">
                 <div>1️⃣ <strong>DNA断片を並び替え：</strong>画面下部のDNA断片をドラッグして正しい順序に配置</div>
                 <div>2️⃣ <strong>オーバーラップを探す：</strong>断片Aの末尾と断片Bの先頭が同じになる組み合わせを探す</div>
@@ -774,8 +916,8 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* level comparison table */}
-        <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">📊 レベル別情報</h3>
+        <div className={`mb-6 p-3 sm:p-4 ${currentColors.accent} border ${currentColors.border} rounded-lg`}>
+          <h3 className={`font-semibold ${currentColors.title} mb-3 text-sm sm:text-base`}>📊 レベル別情報</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs sm:text-sm">
               <thead>
@@ -793,8 +935,8 @@ const GenomeAssemblyGame = () => {
                   const maxScore = levelConfig.score || n * 150;
                   const hintScore = Math.floor(maxScore / 2);
                   return (
-                    <tr key={n} className={`border-b border-gray-200 ${level === n ? 'bg-indigo-100' : ''}`}>
-                      <td className="py-2 px-2 font-medium">
+                    <tr key={n} className={`${level === n ? `bg-white ${currentColors.vibrantBorder} border-2 shadow-sm` : ''}`}>
+                      <td className={`py-2 px-2 font-medium ${level === n ? currentColors.vibrantText : ''}`}>
                         {level === n && '👉 '}レベル{n}
                       </td>
                       <td className="text-center py-2 px-2">{levelConfig.numReads}</td>
@@ -810,10 +952,10 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* target */}
-        <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+        <div className={`mb-6 p-3 sm:p-4 ${currentColors.accent} border ${currentColors.border} rounded-lg`}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">目標配列</h3>
-            <button onClick={()=>setShowTarget(!showTarget)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs sm:text-sm">
+            <h3 className={`font-semibold ${currentColors.title} text-sm sm:text-base`}>目標配列</h3>
+            <button onClick={()=>setShowTarget(!showTarget)} className={`flex items-center gap-1 px-2 sm:px-3 py-1 ${currentColors.complement} ${currentColors.complementHover} text-white rounded text-xs sm:text-sm`}>
               {showTarget ? <EyeOff className="w-3 sm:w-4 h-3 sm:h-4" /> : <Eye className="w-3 sm:w-4 h-3 sm:h-4" />} {showTarget ? '隠す' : '表示'}
             </button>
           </div>
@@ -829,9 +971,9 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* assembled */}
-        <div className="mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg">
+        <div className={`mb-6 p-3 sm:p-4 ${currentColors.accent} border ${currentColors.border} rounded-lg`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
-            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">アセンブル結果</h3>
+            <h3 className={`font-semibold ${currentColors.title} text-sm sm:text-base`}>アセンブル結果</h3>
             <div className="text-xs sm:text-sm text-gray-600">
               類似度: {Math.round(similarity*100)}% | 長さ: {assembledSequence.length}
               {selectedReads.length>0 && (
@@ -853,15 +995,15 @@ const GenomeAssemblyGame = () => {
         </div>
 
         {/* selected reads */}
-        <div className="mb-6 p-3 sm:p-4 bg-green-50 rounded-lg">
+        <div className={`mb-6 p-3 sm:p-4 ${currentColors.accent} border ${currentColors.border} rounded-lg`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
-            <h3 className="font-semibold text-gray-800 text-sm sm:text-base">DNA断片の配置（{selectedReads.length}個） - ドラッグで順番変更（先頭固定）</h3>
+            <h3 className={`font-semibold ${currentColors.title} text-sm sm:text-base`}>DNA断片の配置（{selectedReads.length}個） - ドラッグで順番変更（先頭固定）</h3>
             <button onClick={() => showOverlapHints ? null : setShowHintModal(true)} 
               disabled={showOverlapHints}
               className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium transition-all text-xs sm:text-sm border ${
                 showOverlapHints 
-                  ? 'bg-green-500 text-white border-green-600 cursor-default shadow-sm' 
-                  : 'bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-600 cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105'
+                  ? `${currentColors.primary} text-white ${currentColors.border} cursor-default shadow-sm`
+                  : `${currentColors.complement} ${currentColors.complementHover} text-white ${currentColors.complementBorder} cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105`
               }`}>
               <Lightbulb className="w-4 h-4" /> 
               {showOverlapHints ? 'ヒント表示中' : 'ヒントを見る'}
@@ -883,13 +1025,13 @@ const GenomeAssemblyGame = () => {
                   onTouchMove={index!==0 ? (e)=>handleTouchMove(e,index) : undefined}
                   onTouchEnd={index!==0 ? (e)=>handleTouchEnd(e,index) : undefined}
                   className={`relative transition-all duration-200 ${index===0 ? 'cursor-not-allowed bg-gray-100' : 'cursor-move touch-none'} ${draggedIndex===index ? 'opacity-50 scale-95' : ''} ${dragOverIndex===index ? 'transform translate-y-1' : ''}`}>
-                  <div className={`h-full p-2 sm:p-3 rounded-lg font-mono text-xs border text-left ${index===0 ? 'bg-blue-200 border-blue-400' : 'bg-green-200'}`}>
+                  <div className={`h-full p-2 sm:p-3 rounded-lg font-mono text-xs border-2 text-left ${index===0 ? `${currentColors.vibrantAccent} ${currentColors.vibrantBorder} shadow-md` : `bg-white ${currentColors.border} border-opacity-60 hover:border-opacity-100 hover:shadow-sm transition-all`}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                        <span className="text-xs text-gray-600">Read {index+1} {index===0? '(固定)':''}</span>
-                        <span className="text-xs text-blue-600 font-semibold">{read.isReverse ? "3'→5'" : "5'→3'"}</span>
+                        <span className={`text-xs font-medium ${index===0 ? currentColors.vibrantText : 'text-gray-600'}`}>Read {index+1} {index===0? '(固定)':''}</span>
+                        <span className={`text-xs font-semibold ${index===0 ? currentColors.vibrantText : currentColors.title.replace('800', '600')}`}>{read.isReverse ? "3'→5'" : "5'→3'"}</span>
                       </div>
-                      <span className="text-xs text-gray-500">{read.length}bp {read.hasError ? '⚠️' : ''}</span>
+                      <span className={`text-xs ${index===0 ? currentColors.vibrantText : 'text-gray-500'}`}>{read.length}bp {read.hasError ? '⚠️' : ''}</span>
                     </div>
 
                     <div className="break-all overflow-x-auto">
@@ -900,21 +1042,21 @@ const GenomeAssemblyGame = () => {
 
                     {/* overlap hints */}
                     {showOverlapHints && (
-                      <div className="mt-2 text-xs text-gray-600">
-                        <div>overlap(prev): {read.overlapWithPrev}</div>
-                        <div>overlap(next): {read.overlapWithNext}</div>
+                      <div className={`mt-2 text-xs p-2 rounded bg-gray-50 ${currentColors.vibrantBorder} border`}>
+                        <div className="text-gray-700 font-medium">overlap(prev): <span className={`font-mono ${currentColors.vibrantText} font-bold`}>{read.overlapWithPrev}</span></div>
+                        <div className="text-gray-700 font-medium">overlap(next): <span className={`font-mono ${currentColors.vibrantText} font-bold`}>{read.overlapWithNext}</span></div>
                       </div>
                     )}
 
                     {/* memo */}
                     <div className="mt-2 relative">
                       <button onClick={()=> setShowMemoInput(showMemoInput===read.id? null : read.id)}
-                        className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${readMemos[read.id] ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                        className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${readMemos[read.id] ? `${currentColors.vibrantAccent} ${currentColors.vibrantText}` : `bg-gray-100 text-gray-600 hover:${currentColors.vibrantAccent}`}`}>
                         <StickyNote className="w-3 h-3" />
                         <span className="hidden sm:inline">{readMemos[read.id] ? 'メモ編集' : 'メモ追加'}</span>
                         <span className="sm:hidden">メモ</span>
                       </button>
-                      {readMemos[read.id] && <div className="mt-1 px-2 py-1 bg-blue-100 rounded text-xs text-blue-800 break-words">📝 {readMemos[read.id]}</div>}
+                      {readMemos[read.id] && <div className={`mt-1 px-2 py-1 ${currentColors.vibrantAccent} ${currentColors.vibrantBorder} border rounded text-xs ${currentColors.vibrantText} break-words`}>📝 {readMemos[read.id]}</div>}
                       {showMemoInput === read.id && (
                         <div className="absolute top-full left-0 right-0 z-10 mt-1 p-2 bg-white border-2 border-blue-300 rounded-lg shadow-lg">
                           <input type="text" placeholder="メモ（例：左端候補、overlap 8bp）"
@@ -929,7 +1071,7 @@ const GenomeAssemblyGame = () => {
                   </div>
 
                   {dragOverIndex===index && draggedIndex!==index && (
-                    <div className="absolute inset-0 border-2 border-blue-400 border-dashed rounded-lg pointer-events-none bg-blue-100 bg-opacity-30" />
+                    <div className={`absolute inset-0 border-2 ${currentColors.border} border-dashed rounded-lg pointer-events-none ${currentColors.accent} bg-opacity-30`} />
                   )}
                 </div>
               ))}
@@ -943,15 +1085,15 @@ const GenomeAssemblyGame = () => {
           )}
 
           {selectedReads.length>0 && !gameComplete && (
-            <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-center">
-              <div className="text-yellow-800 font-semibold">🧬 アセンブリ中...</div>
-              <div className="text-yellow-700 text-sm mt-1">正しい隣接関係を作ると declared overlap（表示）で一致してアセンブリできます</div>
+            <div className={`mt-4 p-3 ${currentColors.complementAccent} border ${currentColors.complementBorder} rounded-lg text-center`}>
+              <div className={`${currentColors.title} font-semibold`}>🧬 アセンブリ中...</div>
+              <div className={`${currentColors.title.replace('800', '700')} text-sm mt-1`}>正しい隣接関係を作ると declared overlap（表示）で一致してアセンブリできます</div>
             </div>
           )}
         </div>
 
         {gameComplete && (
-          <div className="mb-6 p-3 sm:p-4 bg-green-100 border-2 border-green-400 rounded-lg text-center">
+          <div className={`mb-6 p-3 sm:p-4 ${currentColors.complementAccent} border-2 ${currentColors.complementBorder} rounded-lg text-center`}>
             <div className="flex items-center justify-center gap-2 mb-2">
               <CheckCircle className="w-5 sm:w-6 h-5 sm:h-6 text-green-600" />
               <h3 className="text-lg sm:text-xl font-bold text-green-800">🎉 レベル{level}クリア！</h3>
@@ -961,8 +1103,8 @@ const GenomeAssemblyGame = () => {
               獲得スコア: {showOverlapHints ? Math.floor((getLevelConfig(level).score || level * 150) / 2) : (getLevelConfig(level).score || level * 150)} 点
               {showOverlapHints && <span className="text-orange-600 text-xs ml-1">(ヒント使用により半減)</span>}
             </p>
-            <button onClick={()=> setLevel(level<3 ? level+1 : 1)} className="px-4 sm:px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base">
-              {level < 3 ? `レベル${level+1}へ進む` : 'レベル1へ戻る'}
+            <button onClick={()=> setLevel(level<4 ? level+1 : 1)} className={`px-4 sm:px-6 py-2 ${currentColors.primary} ${currentColors.primaryHover} text-white rounded-lg font-semibold transition-colors text-sm sm:text-base`}>
+              {level < 4 ? `レベル${level+1}へ進む` : 'レベル1へ戻る'}
             </button>
           </div>
         )}
@@ -971,7 +1113,7 @@ const GenomeAssemblyGame = () => {
           <button onClick={reset} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
             <RotateCcw className="w-4 h-4" /> リセット
           </button>
-          <button onClick={() => initGame()} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm">
+          <button onClick={() => initGame()} className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 ${currentColors.secondary} ${currentColors.secondaryHover} text-white rounded-lg transition-colors text-sm`}>
             <Shuffle className="w-4 h-4" /> 新しい問題
           </button>
         </div>
@@ -1014,7 +1156,7 @@ const GenomeAssemblyGame = () => {
                 </button>
                 <button 
                   onClick={handleShowHints}
-                  className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition-colors text-sm">
+                  className={`px-3 sm:px-4 py-2 ${currentColors.complement} ${currentColors.complementHover} text-white rounded transition-colors text-sm`}>
                   ヒントを表示する
                 </button>
               </div>
