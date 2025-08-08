@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## プロジェクト概要
+
+**ゲノムアセンブリチャレンジ**は、バイオインフォマティクスの核心技術「ゲノムアセンブリ」を体験できる教育ゲームです。DNA断片（reads）をドラッグ&ドロップで組み合わせて、元の完全なDNA配列を復元します。
+
 ## 開発コマンド
 
 ### 基本コマンド
@@ -23,14 +27,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **スタイル**: Tailwind CSS
 - **アイコン**: Lucide React
 - **言語**: JavaScript (ES6+)
+- **ライセンス**: BSD 3-Clause License
 
 ### プロジェクト構造
 ```
-src/
-├── App.jsx          - メインのゲームコンポーネント (GenomeAssemblyGame)
-├── main.jsx         - Reactアプリのエントリーポイント
-index.html           - HTMLテンプレート
-vite.config.js       - Vite設定 (静的アセット配置用)
+├── src/
+│   ├── App.jsx          - メインのゲームコンポーネント (GenomeAssemblyGame)
+│   └── main.jsx         - Reactアプリのエントリーポイント
+├── index.html           - HTMLテンプレート（SEO最適化済み）
+├── vite.config.js       - Vite設定 (静的アセット配置用)
+├── package.json         - プロジェクト設定（BSD-3-Clause ライセンス）
+├── LICENSE              - BSD 3-Clause ライセンス全文
+└── README.md            - プロジェクト説明とゲーム仕様
 ```
 
 ### アプリケーション設計
@@ -39,35 +47,59 @@ vite.config.js       - Vite設定 (静的アセット配置用)
 単一の大きなReactコンポーネントで、ゲノムアセンブリゲーム全体を管理:
 
 **状態管理**:
-- `level` - ゲームレベル (1-3)
+- `level` - ゲームレベル (1-4)
+- `seed` - 再現性のためのシード値
 - `targetSequence` - 復元すべき目標DNA配列
 - `reads` - DNA断片データ
 - `selectedReads` - 選択済みDNA断片の配列順
 - `assembledSequence` - アセンブリ結果
 - `gameComplete` - ゲーム完了状態
+- `score` - 累計スコア
 - `readMemos` - メモ機能 (レベル2以降)
+- `showOverlapHints` - オーバーラップヒント表示状態
 
 **主要アルゴリズム**:
 - `generateRealisticDNA()` - 生物学的に現実的なDNA配列生成
-- `generateReads()` - DNA断片生成 (オーバーラップ保証)
+- `generateReadsFromReference()` - 参照配列からDNA断片生成 (オーバーラップ保証)
 - `reverseComplement()` - リバースコンプリメント変換
 - `findBestOverlap()` - 最適オーバーラップ検出
-- `assembleSequence()` - DNA断片のアセンブリ実行
+- `assembleSequenceFromReads()` - DNA断片のアセンブリ実行
 - `checkSuccess()` - 成功判定 (レベル別基準)
+- `calculateSimilarity()` - 配列類似度計算
 
 **レベル仕様**:
-- **レベル1**: 4個のread、エラーなし、正鎖のみ、完全一致が必要
-- **レベル2**: 6個のread、エラー1個、逆鎖1個、95%一致で成功
-- **レベル3**: 6個のread、長い配列(120bp)、エラー1個、逆鎖1個
+- **レベル1 (基礎編)**: 50bp、6reads、12bp平均、エラーなし、正鎖のみ、100%一致必要 (50点)
+- **レベル2 (応用編)**: 80bp、6reads、18bp平均、エラー1個、逆鎖1個、95%一致で成功 (200点)
+- **レベル3 (上級編)**: 200bp、10reads、30bp平均、エラー2個、逆鎖3個、95%一致で成功 (1,000点)
+- **レベル4 (実践編)**: 1,650bp、20reads、100bp平均、エラー5個、逆鎖5個、95%一致で成功 (10,000点)
 
 ### UI機能
 - **ドラッグ&ドロップ**: DNA断片の順序変更
 - **メモ機能**: read別の注釈 (レベル2以降)
+- **オーバーラップヒント**: overlapWithPrev/Next表示（スコア半減）
+- **シード機能**: 問題の再現性確保
 - **カラーコード**: A=赤、T=青、G=緑、C=紫
 - **視覚的フィードバック**: エラーread(⚠️)、逆鎖read(↺)
+- **フッター**: 著作権表示、GitHubリンク、ライセンス情報
+
+### SEO最適化
+- **メタタグ**: title、description、keywords、author、robots
+- **OGP/Twitter Card**: SNSシェア用メタデータ
+- **構造化データ**: Schema.org WebApplication マークアップ
+- **Google Search Console**: サイト検証タグ
+- **正規URL**: canonical link設定
 
 ### ゲーム教育目標
 - NGSシーケンシングとアセンブリの理解
 - オーバーラップ検出アルゴリズムの体験
 - リバースコンプリメントの概念学習
 - シーケンシングエラー処理の実践
+- 実際のNGSデータ規模での挑戦（レベル4）
+
+## ライセンス
+
+このプロジェクトはBSD 3-Clause Licenseの下で公開されています：
+- 著作権: © 2025-present https://github.com/calliope-pro
+- 自由な利用・改変・配布が可能
+- 著作権表示の保持が必要
+- 作者名の無断使用は禁止
