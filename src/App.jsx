@@ -1021,6 +1021,18 @@ const GenomeAssemblyGame = () => {
           </div>
         )}
       </div>
+      
+      {/* Footer */}
+      <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
+        <div className="space-y-1">
+          <div>
+            © 2025-present <a href="https://github.com/calliope-pro" className="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener noreferrer">calliope-pro</a> - All rights reserved
+          </div>
+          <div>
+            <a href="https://github.com/calliope-pro/genome-assembly-game" className="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener noreferrer">GitHub Repository</a> | BSD 3-Clause License
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
