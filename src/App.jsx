@@ -7,6 +7,7 @@ import {
   EyeOff,
   Lightbulb,
   StickyNote,
+  Github,
 } from "lucide-react";
 
 /**
@@ -814,8 +815,21 @@ const GenomeAssemblyGame = () => {
       <div className="bg-white rounded-lg shadow-lg p-3 sm:p-6">
         {/* header */}
         <div className="text-center mb-6">
-          <h1 className={`text-2xl sm:text-3xl font-bold ${currentColors.title} mb-2`}>🧬 ゲノムアセンブリチャレンジ</h1>
-          <p className="text-sm sm:text-base text-gray-600 px-2">完全なDNA配列を復元しよう！</p>
+          <div className="relative mb-4">
+            <div className="text-center">
+              <h1 className={`text-2xl sm:text-3xl font-bold ${currentColors.title} mb-2`}>🧬 ゲノムアセンブリチャレンジ</h1>
+              <p className="text-sm sm:text-base text-gray-600 px-2">完全なDNA配列を復元しよう！</p>
+            </div>
+            <a
+              href="https://github.com/calliope-pro/genome-assembly-game"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-0 right-0 text-gray-600 hover:text-gray-800 transition-colors p-3 rounded-full hover:bg-gray-100"
+              title="GitHubで見る"
+            >
+              <Github size={32} />
+            </a>
+          </div>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-4 mb-4">
             <div className="flex items-center gap-2">
