@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **スタイル**: Tailwind CSS
 - **アイコン**: Lucide React
 - **言語**: JavaScript (ES6+)
-- **ライセンス**: BSD 3-Clause License
+- **ライセンス**: AGPL-3.0-only
 
 ### プロジェクト構造
 ```
@@ -37,7 +37,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ├── index.html           - HTMLテンプレート（SEO最適化済み）
 ├── vite.config.js       - Vite設定 (静的アセット配置用)
 ├── package.json         - プロジェクト設定（BSD-3-Clause ライセンス）
-├── LICENSE              - BSD 3-Clause ライセンス全文
+├── LICENSE              - GNU Affero General Public License v3 全文
 └── README.md            - プロジェクト説明とゲーム仕様
 ```
 
