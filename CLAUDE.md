@@ -97,9 +97,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 実際のNGSデータ規模での挑戦（レベル4）
 
 ## ライセンス
-
-このプロジェクトはBSD 3-Clause Licenseの下で公開されています：
+このプロジェクトは GNU Affero General Public License Version 3 (AGPL v3) の下で公開されています：
 - 著作権: © 2025-present https://github.com/calliope-pro
-- 自由な利用・改変・配布が可能
-- 著作権表示の保持が必要
-- 作者名の無断使用は禁止
+- 利用、改変、配布は自由ですが、改変版を配布・ネットワーク経由で提供する場合は同じAGPL v3のもとでソースコードを公開する義務があります
+- 著作権表示（クレジット）の保持が必要です
+- 作者名の無断使用は禁止されています（パブリシティ権等に基づく制限）

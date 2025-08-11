@@ -1171,7 +1171,9 @@ const GenomeAssemblyGame = () => {
             © 2025-present <a href="https://github.com/calliope-pro" className="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener noreferrer">calliope-pro</a> - All rights reserved
           </div>
           <div>
-            <a href="https://github.com/calliope-pro/genome-assembly-game" className="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener noreferrer">GitHub Repository</a> | BSD 3-Clause License
+            <a href="https://github.com/calliope-pro/genome-assembly-game" className="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener noreferrer">
+              GitHub Repository
+            </a> | Licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU AGPL v3</a>
           </div>
         </div>
       </footer>
